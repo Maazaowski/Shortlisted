@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ChevronDown, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, ChevronDown, Plus, Trash2, Upload } from "lucide-react";
 import { withUser } from "@shortlisted/db";
 import { requireUser } from "@/lib/session";
 import {
@@ -40,9 +40,14 @@ export default async function BankPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="enter">
-        <h1 className="display text-[34px]">Experience bank</h1>
-        <p className="mt-2 max-w-2xl text-ink-2">The only source the model may draw from. Everything on a tailored resume traces back to a bullet here.</p>
+      <div className="enter flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="display text-[34px]">Experience bank</h1>
+          <p className="mt-2 max-w-2xl text-ink-2">The only source the model may draw from. Everything on a tailored resume traces back to a bullet here.</p>
+        </div>
+        <Link href="/onboarding" className="btn">
+          <Upload size={14} strokeWidth={1.75} /> Import a resume
+        </Link>
       </div>
 
       <div className="grid gap-10 lg:grid-cols-[320px_1fr]">
