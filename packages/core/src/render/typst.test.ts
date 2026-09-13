@@ -155,9 +155,10 @@ describe("buildResumeTypst", () => {
     expect(src).toContain("stroke: (left: 0.7pt + rule)");
     expect(src).toContain("[*Senior Engineer*]");
     expect(src).toContain("[*Engineer*]");
-    // Globex is alone, so its title leads and the organisation sits under it.
-    expect(src).toContain(`weight: "bold")[Junior]`);
-    expect(src).toContain("[Globex]");
+    // Globex has one role and uses the same layout: company first, title under it.
+    expect(src).toContain(`weight: "bold")[Globex]`);
+    expect(src).toContain("[*Junior*]");
+    expect(src.match(/stroke: \(left: 0\.7pt \+ rule\)/g)).toHaveLength(2);
   });
 
   it("shortens links and picks an icon per host", () => {

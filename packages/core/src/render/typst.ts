@@ -117,12 +117,12 @@ function preamble(fontSize: string): string[] {
     `#let accent = rgb(${str(ACCENT)})`,
     `#set page(paper: "us-letter", margin: (x: 0.6in, top: 0.5in, bottom: 0.55in))`,
     `#set text(font: ("Merriweather", "Libertinus Serif"), size: ${fontSize}, fill: ink, hyphenate: false)`,
-    `#set par(justify: false, leading: 0.62em, spacing: 0.62em)`,
+    `#set par(justify: false, leading: 0.82em, spacing: 0.85em)`,
     `#show link: set text(fill: accent)`,
     `#let icon(src) = box(height: 0.8em, baseline: 12%, image(bytes(src), format: "svg", height: 0.8em))`,
     `#let item(src, body) = box[#icon(src)#h(0.32em)#body]`,
-    `#show heading.where(level: 1): it => block(above: 1.3em, below: 0.7em, width: 100%)[#line(length: 100%, stroke: 0.6pt + rule)#v(0.6em)#box(width: 100%, inset: (bottom: 0.3em), stroke: (bottom: 0.7pt + ink))[#text(size: 10.2pt, weight: "bold", tracking: 0.04em)[#upper(it.body)]]]`,
-    `#set list(marker: text(fill: muted)[·], indent: 0.15em, body-indent: 0.4em, spacing: 0.5em)`,
+    `#show heading.where(level: 1): it => block(above: 1.7em, below: 0.9em, width: 100%, sticky: true)[#line(length: 100%, stroke: 0.6pt + rule)#v(0.8em)#box(width: 100%, inset: (bottom: 0.35em), stroke: (bottom: 0.7pt + ink))[#text(size: 10.5pt, weight: "bold", tracking: 0.04em)[#upper(it.body)]]]`,
+    `#set list(marker: text(fill: muted)[·], indent: 0.15em, body-indent: 0.45em, spacing: 0.65em)`,
   ];
 }
 
@@ -146,20 +146,21 @@ function header(bank: Bank, headline: string | null): string[] {
     `#text(size: 16pt, weight: "bold", tracking: 0.07em)[${esc(bank.fullName.toUpperCase())}]`,
   ];
   if (headline) {
-    lines.push(`#v(-0.35em)`);
-    lines.push(
-      `#text(size: 8.4pt, fill: muted, tracking: 0.05em)[${esc(headline)}]`,
-    );
+    lines.push(`#v(-0.05em)`);
+    lines.push(`#text(size: 10.5pt, tracking: 0.04em)[${esc(headline)}]`);
   }
-  lines.push(`#v(-0.35em)`);
-  lines.push(`#text(size: 7.6pt)[${items.join("#h(1.1em)")}]`);
+  lines.push(`#v(-0.15em)`);
+  lines.push(`#text(size: 8pt)[${items.join("#h(1.1em)")}]`);
   lines.push(`]`);
   return lines;
 }
 
-/** Right-hand meta for a role: dates, then location. */
+/** Right-hand meta for a role: bold dates, then the location after a dot. */
 function roleMeta(dates: string, location: string | null): string {
-  return `#text(size: 7.8pt, weight: "bold")[${esc([dates, location ?? ""].filter(Boolean).join(",  "))}]`;
+  const parts: string[] = [];
+  if (dates) parts.push(`#text(weight: "bold")[${esc(dates)}]`);
+  if (location) parts.push(esc(location));
+  return `#text(size: 8.2pt)[${parts.join("#h(0.5em)#text(fill: muted)[·]#h(0.5em)")}]`;
 }
 
 function twoColumn(left: string, right: string): string {
@@ -167,18 +168,18 @@ function twoColumn(left: string, right: string): string {
 }
 
 function metaLine(parts: string[]): string {
-  return `#text(size: 8pt)[${parts.join("#h(0.5em)·#h(0.5em)")}]`;
+  return `#text(size: 8.4pt)[${parts.join("#h(0.5em)·#h(0.5em)")}]`;
 }
 
 /**
  * One fixed template, single column. Parsers read it and the user never checks
- * layout. Consecutive roles at the same organisation are grouped under its name
- * and carry a hairline down the left, as a resume written by hand would.
+ * layout. Roles are grouped under their organisation: the company name leads,
+ * each title sits under it with its dates, and a hairline runs down the left.
  */
 export function buildResumeTypst(bank: Bank, selection: Selection): string {
   const idx = bulletIndex(bank);
   const lines: string[] = [
-    ...preamble("8.6pt"),
+    ...preamble("9.2pt"),
     "",
     ...header(bank, selection.headline),
     "",
@@ -199,7 +200,7 @@ export function buildResumeTypst(bank: Bank, selection: Selection): string {
 
   if (selection.skillGroups.length > 0) {
     lines.push(`= Skills`);
-    lines.push(`#block[#set par(spacing: 0.95em)`);
+    lines.push(`#block[#set par(spacing: 1.05em)`);
     for (const g of selection.skillGroups) {
       lines.push(`*${esc(g.name)}:* ${esc(g.skills.join(", "))}`);
       lines.push("");
@@ -225,37 +226,22 @@ export function buildResumeTypst(bank: Bank, selection: Selection): string {
     }
     for (const group of groups) {
       const first = entryOf(group[0]!)!;
-      if (group.length === 1) {
-        lines.push(`#block(above: 0.9em, below: 0.4em)[`);
-        lines.push(`#text(size: 9.6pt, weight: "bold")[${esc(first.title)}]`);
-        lines.push(`#v(-0.2em)`);
+      lines.push(
+        `#block(above: 1.9em, below: 0.5em, sticky: true)[#text(size: 10.2pt, weight: "bold")[${esc(first.organization)}]]`,
+      );
+      lines.push(
+        `#block(stroke: (left: 0.7pt + rule), inset: (left: 0.75em), outset: (left: 0.15em), width: 100%)[`,
+      );
+      for (const se of group) {
+        const e = entryOf(se)!;
         lines.push(
-          twoColumn(
-            esc(first.organization),
-            roleMeta(dateRange(first.startDate, first.endDate), first.location),
-          ),
+          `#block(above: 1.6em, below: 0.6em, sticky: true)[${twoColumn(`*${esc(e.title)}*`, roleMeta(dateRange(e.startDate, e.endDate), e.location))}]`,
         );
-        lines.push(`]`);
-        bullets(group[0]!);
-        lines.push("");
-      } else {
-        lines.push(
-          `#block(above: 0.9em, below: 0.35em)[#text(size: 9.6pt, weight: "bold")[${esc(first.organization)}]]`,
-        );
-        lines.push(
-          `#block(stroke: (left: 0.7pt + rule), inset: (left: 0.75em), outset: (left: 0.15em), width: 100%)[`,
-        );
-        for (const se of group) {
-          const e = entryOf(se)!;
-          lines.push(
-            `#block(above: 0.75em, below: 0.4em)[${twoColumn(`*${esc(e.title)}*`, roleMeta(dateRange(e.startDate, e.endDate), e.location))}]`,
-          );
-          bullets(se);
-          lines.push("");
-        }
-        lines.push(`]`);
+        bullets(se);
         lines.push("");
       }
+      lines.push(`]`);
+      lines.push("");
     }
   }
 
@@ -268,9 +254,9 @@ export function buildResumeTypst(bank: Bank, selection: Selection): string {
         meta.push(`#link(${str(e.url)})[${esc(linkItem(e.url).label)}]`);
       const dates = dateRange(e.startDate, e.endDate);
       if (dates) meta.push(esc(dates));
-      lines.push(`#block(above: 0.9em, below: 0.4em)[`);
-      lines.push(`#text(size: 9.6pt, weight: "bold")[${esc(e.title)}]`);
-      lines.push(`#v(-0.2em)`);
+      lines.push(`#block(above: 1.25em, below: 0.55em, sticky: true)[`);
+      lines.push(`#text(size: 10.2pt, weight: "bold")[${esc(e.title)}]`);
+      lines.push(`#v(-0.05em)`);
       lines.push(metaLine(meta));
       lines.push(`]`);
       bullets(se);
@@ -294,10 +280,10 @@ export function buildResumeTypst(bank: Bank, selection: Selection): string {
         .map((s) => esc(s!));
       if (c.url)
         meta.push(`#link(${str(c.url)})[${esc(linkItem(c.url).label)}]`);
-      lines.push(`#block(above: 0.9em, below: 0.4em)[`);
-      lines.push(`#text(size: 9.6pt, weight: "bold")[${esc(c.name)}]`);
+      lines.push(`#block(above: 1.25em, below: 0.55em, sticky: true)[`);
+      lines.push(`#text(size: 10.2pt, weight: "bold")[${esc(c.name)}]`);
       if (meta.length > 0) {
-        lines.push(`#v(-0.2em)`);
+        lines.push(`#v(-0.05em)`);
         lines.push(metaLine(meta));
       }
       lines.push(`]`);
@@ -317,9 +303,9 @@ function education(ed: Education): string[] {
     .filter(Boolean)
     .map((s) => esc(s!));
   const lines = [
-    `#block(above: 0.9em, below: 0.4em)[`,
-    `#text(size: 9.6pt, weight: "bold")[${esc(ed.degree)}]`,
-    `#v(-0.2em)`,
+    `#block(above: 1.25em, below: 0.55em, sticky: true)[`,
+    `#text(size: 10.2pt, weight: "bold")[${esc(ed.degree)}]`,
+    `#v(-0.05em)`,
     metaLine(meta),
     `]`,
   ];
@@ -334,8 +320,8 @@ export function buildCoverLetterTypst(
   job: { title: string; company: string },
 ): string {
   const lines: string[] = [
-    ...preamble("9.6pt"),
-    `#set par(leading: 0.78em, spacing: 0.95em)`,
+    ...preamble("10.2pt"),
+    `#set par(leading: 0.92em, spacing: 1.1em)`,
     "",
     ...header(bank, null),
     "",
