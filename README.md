@@ -17,6 +17,7 @@
   <img alt="Docker Compose" src="https://img.shields.io/badge/Docker-Compose-1a1a17?style=flat-square&logo=docker&logoColor=white">
   <img alt="Chrome extension" src="https://img.shields.io/badge/Chrome-Manifest%20V3-1a1a17?style=flat-square&logo=googlechrome&logoColor=white">
   <img alt="Works without an API key" src="https://img.shields.io/badge/API%20key-optional-c8401a?style=flat-square">
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-1a1a17?style=flat-square"></a>
 </p>
 
 <p align="center">
@@ -249,3 +250,7 @@ Everything runs on your machine and listens on localhost only. In manual mode no
 Working and verified: the full loop in manual mode, including the extension in Chrome, the Docker stack, reminders, the dashboard, Word and PDF import. The Anthropic provider is wired but has not been exercised with a real key yet. Attach has been tested against a fixture form, not yet against a live Greenhouse or Lever page. A local-model provider (Ollama) is a natural next step behind the same seam as manual mode.
 
 Bugs and ideas: open an issue.
+
+## License
+
+[MIT](LICENSE).
