@@ -78,7 +78,18 @@ export function normalizeCapture(capture: Capture): NormalizedCapture {
 
   const text = capture.text.replace(/\r/g, "").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim().slice(0, MAX_TEXT);
   const rawText = capture.pageTitle ? `Page title: ${capture.pageTitle}\n\n${text}` : text;
-  return { rawText, title: null, company: null, sourceHost, contentHash: hashText(rawText), fromJsonLd: false };
+  return { rawText, title: provisionalTitle(capture.pageTitle), company: null, sourceHost, contentHash: hashText(rawText), fromJsonLd: false };
+}
+
+/**
+ * A stand-in title from the page title until the parse replaces it: the part
+ * before the first separator, so "Backend Engineer - Lumen | Careers" becomes
+ * "Backend Engineer". Null when there is nothing usable.
+ */
+export function provisionalTitle(pageTitle: string | null | undefined): string | null {
+  const first = (pageTitle ?? "").split(/\s+[-|·–—:]\s+/)[0]?.trim() ?? "";
+  if (first.length < 3 || first.length > 120) return null;
+  return first;
 }
 
 export function hashText(text: string): string {

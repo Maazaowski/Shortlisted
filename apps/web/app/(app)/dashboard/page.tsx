@@ -48,9 +48,9 @@ export default async function DashboardPage() {
             ))}
           </div>
           <div className="mt-2 flex gap-1.5 border-t border-hair pt-2">
-            {stats.perWeek.map((w) => (
-              <div key={w.weekStart} className="num flex-1 truncate text-center text-[10px] text-ink-3">
-                {weekLabel(w.weekStart)}
+            {stats.perWeek.map((w, i) => (
+              <div key={w.weekStart} className="num flex-1 text-center text-[10px] whitespace-nowrap text-ink-3">
+                {i % 2 === lastIndex % 2 ? weekLabel(w.weekStart) : ""}
               </div>
             ))}
           </div>

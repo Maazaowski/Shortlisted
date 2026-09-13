@@ -9,6 +9,7 @@ if (existsSync(rootEnv)) process.loadEnvFile(rootEnv);
 
 const nextConfig: NextConfig = {
   agentRules: false,
+  devIndicators: false,
   serverExternalPackages: ["@prisma/client", "@shortlisted/db", "@shortlisted/core", "pg-boss", "unpdf", "mammoth"],
 };
 

@@ -44,7 +44,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function listTargets() {
   return (await fetch(`http://localhost:${PORT}/json/list`)).json();
 }
-for (let i = 0; i < 40; i++) { try { await listTargets(); break; } catch { await sleep(250); } }
+for (let i = 0; i < 120; i++) { try { await listTargets(); break; } catch { await sleep(250); } }
 
 // One CDP session per target.
 class Session {
@@ -85,22 +85,29 @@ await browser.send("Target.activateTarget", { targetId: jobId });
 let targets = await listTargets();
 const panel = await attach(targets.find((t) => t.id === panelId));
 const job = await attach(targets.find((t) => t.id === jobId));
+// Screenshots at the side panel's real width.
+await panel.send("Emulation.setDeviceMetricsOverride", { width: 360, height: 900, deviceScaleFactor: 2, mobile: false });
 const nav = await panel.send("Page.navigate", { url: `chrome-extension://${extId}/sidepanel.html` });
 log("navigate result:", JSON.stringify(nav));
 await sleep(1200);
 log("panel href:", await panel.eval("location.href"), "| storage api:", await panel.eval("typeof chrome?.storage?.local"));
+// Screenshots: no mount animations mid-frame, and an optional forced colour scheme (PANEL_SCHEME=light|dark).
+const scheme = process.env.PANEL_SCHEME;
+const stillStyle = `*{animation:none!important;transition:none!important}${scheme ? `:root{color-scheme:${scheme}!important}` : ""}`;
+const still = () => panel.eval(`(() => { let s = document.getElementById("e2e-still"); if (!s) { s = document.createElement("style"); s.id = "e2e-still"; document.head.appendChild(s); } s.textContent = ${JSON.stringify(stillStyle)}; return true; })()`);
 
 // Point the panel at the dev server and reload it so init() reads the setting.
 await panel.eval(`chrome.storage.local.set({ apiBase: ${JSON.stringify(API)} })`);
 await panel.send("Page.reload");
 await sleep(1500);
+await still();
 
 const text = async () => (await panel.eval(`document.body.innerText`)).replace(/\n+/g, " | ");
 const visible = async (sel) => panel.eval(`(() => { const el = document.querySelector(${JSON.stringify(sel)}); return !!el && !el.closest("[hidden]"); })()`);
 log("panel after load:", await text());
 if (!(await visible("#ready"))) throw new Error("panel is not in the ready state");
 log("tab title seen by panel:", await panel.eval(`document.getElementById("tab-title").textContent`));
-await panel.shot(path.join(OUT, "ext-1-ready.png"));
+await still(); await sleep(300); await panel.shot(path.join(OUT, "ext-1-ready.png"));
 
 // Capture.
 await panel.eval(`document.getElementById("capture").click()`);
@@ -108,7 +115,7 @@ let state = "";
 for (let i = 0; i < 30; i++) { await sleep(500); state = await text(); if (/Your turn|Already tailored|Generating/i.test(state)) break; }
 log("after capture:", state);
 if (!/Your turn/i.test(state)) throw new Error("expected the waiting state");
-await panel.shot(path.join(OUT, "ext-2-waiting.png"));
+await still(); await sleep(300); await panel.shot(path.join(OUT, "ext-2-waiting.png"));
 const found = await (await fetch(`${API}/api/applications?url=${encodeURIComponent(JOB_URL)}`)).json();
 log("application by url:", found?.id, found?.generationStatus);
 const appId = `/applications/${found.id}`;
@@ -128,7 +135,7 @@ for (let i = 0; i < 60; i++) { await sleep(1000); state = await text(); if (/Att
 log("after reply:", state.slice(0, 400));
 const attachEnabled = await panel.eval(`!document.getElementById("attach")?.disabled`);
 log("attach enabled:", attachEnabled);
-await panel.shot(path.join(OUT, "ext-3-result.png"));
+await still(); await sleep(300); await panel.shot(path.join(OUT, "ext-3-result.png"));
 if (!attachEnabled) throw new Error("Attach is not enabled; generation did not finish");
 
 // Attach into the job page's form.
@@ -144,9 +151,10 @@ await sleep(1500);
 log("stage pill:", await panel.eval(`document.querySelector(".pill.accent")?.textContent`));
 const view = await (await fetch(`${API}/api/applications/${id}`)).json();
 log("server view:", view.stage, view.generationStatus, "resume file:", view.resume?.hasFile, "flags:", view.resume?.flags?.length);
-await panel.shot(path.join(OUT, "ext-5-applied.png"));
+await still(); await sleep(300); await panel.shot(path.join(OUT, "ext-5-applied.png"));
 
 panel.close(); job.close(); browser.close();
 chrome.kill();
 fixtureServer.close();
 log("done");
+process.exit(0);
