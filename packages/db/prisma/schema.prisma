@@ -1,0 +1,230 @@
+// Shortlisted data model. See docs/design.md for the reasoning.
+//
+// Single-user tool. Every model still carries `userId`, always LOCAL_USER_ID
+// from @shortlisted/db, so a second user could be added later without a
+// schema change. There is no auth and no row-level security.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Profile and experience bank
+// ---------------------------------------------------------------------------
+
+model Profile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  fullName       String
+  email          String
+  phone          String?
+  location       String?
+  /// [{ label: "GitHub", url: "https://..." }]
+  links          Json     @default("[]")
+  /// The headline on the base resume, e.g. "Senior Software Engineer".
+  headline       String
+  /// Base summary, two or three lines.
+  summary        String
+  /// [{ name: "Backend", skills: ["Node", "Postgres"] }]
+  skillGroups    Json     @default("[]")
+  /// [{ institution, degree, field, start, end }]
+  education      Json     @default("[]")
+  /// Tokens: {name} {title} {company}
+  fileNameFormat String   @default("{name} - {title} - {company}.pdf")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+enum BankEntryKind {
+  ROLE
+  PROJECT
+}
+
+model BankEntry {
+  id           String        @id @default(cuid())
+  userId       String
+  kind         BankEntryKind
+  organization String
+  title        String
+  location     String?
+  /// YYYY-MM
+  startDate    String?
+  /// YYYY-MM, null means present
+  endDate      String?
+  url          String?
+  sortOrder    Int           @default(0)
+  bullets      BankBullet[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([userId, sortOrder])
+}
+
+model BankBullet {
+  id        String    @id @default(cuid())
+  userId    String
+  entryId   String
+  entry     BankEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  text      String
+  /// Lowercase skill tags, e.g. ["postgres", "prisma", "rls"]
+  skills    String[]  @default([])
+  /// The headline number in the bullet, if any, e.g. "40% faster".
+  metric    String?
+  /// Whether this bullet appears on the base (untailored) resume.
+  inBase    Boolean   @default(true)
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([entryId, sortOrder])
+}
+
+// ---------------------------------------------------------------------------
+// Jobs and applications
+// ---------------------------------------------------------------------------
+
+model Job {
+  id           String        @id @default(cuid())
+  userId       String
+  url          String?
+  sourceHost   String?
+  title        String?
+  company      String?
+  rawText      String
+  contentHash  String
+  /// ParsedJob from @shortlisted/core, filled by the worker.
+  parsed       Json?
+  applications Application[]
+  createdAt    DateTime      @default(now())
+
+  @@unique([userId, contentHash])
+  @@index([userId, url])
+}
+
+enum Stage {
+  SAVED
+  GENERATED
+  APPLIED
+  SCREENING
+  INTERVIEW
+  OFFER
+  REJECTED
+  WITHDRAWN
+}
+
+enum Verdict {
+  STRONG
+  GOOD
+  POSSIBLE
+  POOR
+}
+
+enum GenerationStatus {
+  /// Manual provider: waiting for the user to paste the model's reply.
+  WAITING
+  QUEUED
+  RUNNING
+  DONE
+  FAILED
+  SKIPPED
+}
+
+model Application {
+  id               String           @id @default(cuid())
+  userId           String
+  jobId            String
+  job              Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  stage            Stage            @default(SAVED)
+  fitVerdict       Verdict?
+  fitScore         Int?
+  gaps             String[]         @default([])
+  rejectionReason  String?
+  generationStatus GenerationStatus @default(QUEUED)
+  generationError  String?
+  /// Free-text instruction from the last Regenerate.
+  regenerateNote   String?
+  /// Manual provider: the pasted selection, consumed by the worker on the next run.
+  pendingSelection Json?
+  stageEvents      StageEvent[]
+  documents        Document[]
+  notes            Note[]
+  reminders        Reminder[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([userId, stage])
+  @@index([userId, updatedAt])
+}
+
+model StageEvent {
+  id            String      @id @default(cuid())
+  userId        String
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  fromStage     Stage?
+  toStage       Stage
+  note          String?
+  createdAt     DateTime    @default(now())
+
+  @@index([applicationId, createdAt])
+}
+
+enum DocumentType {
+  RESUME
+  COVER_LETTER
+}
+
+model Document {
+  id            String       @id @default(cuid())
+  userId        String
+  applicationId String
+  application   Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  type          DocumentType
+  version       Int
+  /// Selection from @shortlisted/core for RESUME; { text } for COVER_LETTER.
+  selection     Json
+  /// ValidationFlag[] from @shortlisted/core.
+  flags         Json         @default("[]")
+  /// ResumeDiff from @shortlisted/core (RESUME only).
+  diff          Json?
+  fileName      String
+  /// Storage key; null while rendering or for text-only documents.
+  fileKey       String?
+  createdAt     DateTime     @default(now())
+
+  @@unique([applicationId, type, version])
+  @@index([userId])
+}
+
+model Note {
+  id            String      @id @default(cuid())
+  userId        String
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  body          String
+  createdAt     DateTime    @default(now())
+
+  @@index([applicationId, createdAt])
+}
+
+model Reminder {
+  id            String      @id @default(cuid())
+  userId        String
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  dueAt         DateTime
+  /// Which rule created it, e.g. "quiet-after-applied-10d".
+  rule          String
+  doneAt        DateTime?
+  createdAt     DateTime    @default(now())
+
+  /// One reminder per rule per application, so syncing is idempotent.
+  @@unique([applicationId, rule])
+  @@index([userId, dueAt])
+}

@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Shortlisted",
+  "version": "0.2.0",
+  "description": "One click on a job page. A tailored resume and cover letter, and the application tracked from Saved to Offer.",
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "action": {
+    "default_title": "Shortlisted",
+    "default_icon": {
+      "16": "icons/16.png",
+      "48": "icons/48.png",
+      "128": "icons/128.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["sidePanel", "activeTab", "scripting", "storage", "tabs"],
+  "host_permissions": ["<all_urls>"]
+}

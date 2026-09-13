@@ -1,0 +1,19 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+allowBuilds:
+  "@prisma/client": true
+  "@prisma/engines": true
+  prisma: true
+  esbuild: true
+  sharp: true
+
+minimumReleaseAgeExclude:
+  - '@types/node@22.20.2'
+  - zod@4.6.1
+  - react-dom@19.3.0
+  - react@19.3.0
+  - scheduler@0.28.0
+
+verifyDepsBeforeRun: false

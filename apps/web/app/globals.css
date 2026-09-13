@@ -1,0 +1,537 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Tokens. Warm paper neutrals, one accent, hairline borders, no gradients.
+   Colour mode comes from html[data-mode] (absent = follow the system) and the
+   accent from html[data-accent]; both are cookies the root layout reads.
+   --------------------------------------------------------------------------- */
+
+:root {
+  --paper: light-dark(#f6f5f1, #121210);
+  --surface: light-dark(#ffffff, #1b1b18);
+  --surface-2: light-dark(#efede7, #232320);
+  --hair: light-dark(#e4e1da, #2c2c28);
+  --hair-strong: light-dark(#cdc9bf, #3b3b35);
+  --ink: light-dark(#1a1a17, #edebe4);
+  --ink-2: light-dark(#66635b, #a9a69c);
+  --ink-3: light-dark(#9b978d, #736f65);
+  --ink-inverse: light-dark(#f6f5f1, #121210);
+
+  --good: light-dark(#2f7a3f, #7fc08e);
+  --warn: light-dark(#b4680a, #e5a83b);
+  --bad: light-dark(#b4322a, #f07e74);
+
+  --stage-saved: var(--ink-3);
+  --stage-generated: var(--accent);
+  --stage-applied: light-dark(#2547d0, #7b93ff);
+  --stage-screening: light-dark(#b4680a, #e5a83b);
+  --stage-interview: light-dark(#8b3f9e, #c58ad6);
+  --stage-offer: light-dark(#2f7a3f, #7fc08e);
+  --stage-rejected: light-dark(#b4322a, #f07e74);
+  --stage-withdrawn: var(--ink-3);
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --fast: 120ms;
+  --base: 200ms;
+
+  color-scheme: light dark;
+}
+html[data-mode="light"] {
+  color-scheme: light;
+}
+html[data-mode="dark"] {
+  color-scheme: dark;
+}
+
+:root,
+html[data-accent="persimmon"] {
+  --accent: light-dark(#c8401a, #f0764f);
+}
+html[data-accent="cobalt"] {
+  --accent: light-dark(#2547d0, #7b93ff);
+}
+html[data-accent="moss"] {
+  --accent: light-dark(#2f6a3c, #7fc08e);
+}
+:root {
+  --accent-soft: color-mix(in oklab, var(--accent) 10%, var(--surface));
+  --good-soft: color-mix(in oklab, var(--good) 10%, var(--surface));
+  --warn-soft: color-mix(in oklab, var(--warn) 12%, var(--surface));
+  --bad-soft: color-mix(in oklab, var(--bad) 10%, var(--surface));
+}
+
+@theme inline {
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, Menlo, monospace;
+
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-hair: var(--hair);
+  --color-hair-strong: var(--hair-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-inverse: var(--ink-inverse);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+}
+
+/* ---------------------------------------------------------------------------
+   Base
+   --------------------------------------------------------------------------- */
+
+html {
+  font-family: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+body {
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+::selection {
+  background: color-mix(in oklab, var(--accent) 22%, transparent);
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Type */
+.display {
+  font-family: var(--font-instrument), ui-serif, Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+}
+.display em {
+  font-style: italic;
+  color: var(--accent);
+}
+.label {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.num {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.field-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.hint {
+  margin-top: 0.35rem;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* ---------------------------------------------------------------------------
+   Components
+   --------------------------------------------------------------------------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--hair);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  transition: border-color var(--base) var(--ease);
+}
+.card-link:hover {
+  border-color: var(--hair-strong);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  height: 2.25rem;
+  padding: 0 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--hair-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--fast) var(--ease),
+    border-color var(--fast) var(--ease),
+    color var(--fast) var(--ease),
+    opacity var(--fast) var(--ease);
+}
+.btn:hover {
+  background: var(--surface-2);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--ink-inverse);
+}
+.btn-primary:hover {
+  background: color-mix(in oklab, var(--ink) 86%, var(--paper));
+  border-color: transparent;
+}
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ink-2);
+}
+.btn-ghost:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.btn-danger:hover {
+  color: var(--bad);
+}
+.btn-sm {
+  height: 1.85rem;
+  padding: 0 0.6rem;
+  font-size: 12px;
+}
+
+.field {
+  width: 100%;
+  min-height: 2.25rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--hair-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.45;
+  transition:
+    border-color var(--fast) var(--ease),
+    box-shadow var(--fast) var(--ease);
+}
+.field::placeholder {
+  color: var(--ink-3);
+}
+.field:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent);
+}
+textarea.field {
+  min-height: 4rem;
+}
+select.field {
+  appearance: none;
+  padding-right: 1.8rem;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239b978d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+}
+input[type="checkbox"] {
+  accent-color: var(--ink);
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+/* Inline status with a coloured dot. Used instead of pills. */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.tag::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--tag-color, var(--ink-3));
+  flex-shrink: 0;
+}
+.tag-ink {
+  color: var(--ink);
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 1.5rem;
+  padding: 0 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--hair);
+  background: var(--surface);
+  font-size: 12px;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.callout {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--hair);
+  border-left-width: 3px;
+  background: var(--surface);
+  font-size: 13px;
+}
+.callout-warn {
+  border-left-color: var(--warn);
+}
+.callout-bad {
+  border-left-color: var(--bad);
+}
+.callout-good {
+  border-left-color: var(--good);
+}
+.callout-accent {
+  border-left-color: var(--accent);
+}
+
+.divider {
+  height: 1px;
+  background: var(--hair);
+}
+
+/* Skeleton and progress */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--surface-2);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--ink) 6%, transparent), transparent);
+  animation: shimmer 1.6s infinite;
+}
+.pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--accent);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+.progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.progress > span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  transform-origin: left;
+  animation: grow-x 480ms var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 50ms);
+}
+.bar {
+  background: var(--ink);
+  border-radius: 2px 2px 0 0;
+  transform-origin: bottom;
+  animation: grow-y 480ms var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+  min-height: 2px;
+}
+.bar-accent {
+  background: var(--accent);
+}
+
+/* Board */
+.column {
+  min-height: 14rem;
+  padding: 0 0.75rem;
+  border-left: 1px solid var(--hair);
+}
+.column:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+.column-empty {
+  padding: 0.5rem 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* Timeline */
+.timeline {
+  position: relative;
+  padding-left: 1.1rem;
+}
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: var(--hair-strong);
+}
+.timeline-dot {
+  position: absolute;
+  left: -1.1rem;
+  top: 6px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--hair-strong);
+}
+
+/* Stage stepper */
+.step {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.step-done {
+  color: var(--ink-2);
+}
+.step-current {
+  color: var(--ink);
+  font-weight: 500;
+}
+.step-mark {
+  display: grid;
+  place-items: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--hair-strong);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  color: var(--ink-3);
+}
+.step-done .step-mark {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--ink-inverse);
+}
+.step-current .step-mark {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Dropzone */
+.dropzone {
+  border: 1px dashed var(--hair-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition:
+    border-color var(--fast) var(--ease),
+    background-color var(--fast) var(--ease);
+}
+.dropzone:hover,
+.dropzone[data-active="true"] {
+  border-color: var(--ink);
+  background: var(--surface-2);
+}
+
+/* Diff */
+.diff-block {
+  border-left: 2px solid var(--hair-strong);
+  padding-left: 0.85rem;
+}
+.diff-add {
+  color: var(--good);
+}
+.diff-del {
+  color: var(--ink-3);
+  text-decoration: line-through;
+  text-decoration-color: var(--hair-strong);
+}
+
+/* ---------------------------------------------------------------------------
+   Motion. Short, one easing, no springs.
+   --------------------------------------------------------------------------- */
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes grow-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.enter {
+  animation: fade-up 260ms var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 30ms);
+}
+.page-enter {
+  animation: fade-up 220ms var(--ease) both;
+}
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
