@@ -155,7 +155,7 @@ Seven steps per capture. Two are model calls, the rest is code.
 2. **Score fit.** Code compares must-haves against your bank's skill tags. Strong, Good, Possible or Poor, plus the named gaps. Poor stops here, before anything is paid for.
 3. **Select.** The model gets the posting and the bank and returns a headline, a summary, ordered skill groups, bullet ids with optional rewordings, and the cover letter.
 4. **Validate.** Code checks every id exists and every rewording keeps the numbers and tool names of its source. Failures are flagged, never silently accepted.
-5. **Render.** One Typst template, single column, plain text, parser friendly.
+5. **Render.** One Typst template, single column, parser friendly, set in Merriweather with hairline rules.
 6. **Store.** PDFs to disk, the selection JSON beside them so any version can be diffed or re-rendered.
 7. **Advance.** The application moves to Generated and the panel shows the result.
 

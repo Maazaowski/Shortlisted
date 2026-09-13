@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { buildImportPrompt, importBankFromResume, ManualReplyError, normalizeSkills, parseImportReply, provider, type ImportedBank } from "@shortlisted/core";
+import { buildImportPrompt, importBankFromResume, ManualReplyError, newCertificationId, normalizeSkills, parseImportReply, provider, type ImportedBank } from "@shortlisted/core";
 import { withUser } from "@shortlisted/db";
 import { requireUser } from "@/lib/session";
 import { RESUME_MAX_BYTES, ResumeReadError, resumeText } from "@/lib/resume-text";
@@ -71,6 +71,7 @@ async function writeImportedBank(userId: string, imported: ImportedBank): Promis
     summary: imported.summary,
     skillGroups: imported.skillGroups.map((g) => ({ name: g.name, skills: g.skills })),
     education: imported.education,
+    certifications: imported.certifications.map((c) => ({ id: newCertificationId(), ...c })),
   };
 
   await withUser(userId, async (tx) => {

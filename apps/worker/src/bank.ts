@@ -20,6 +20,7 @@ export async function loadBank(tx: Tx, userId: string): Promise<{ bank: Bank; fi
     summary: profile.summary,
     skillGroups: profile.skillGroups,
     education: profile.education,
+    certifications: profile.certifications,
     entries: entries.map((e) => ({
       id: e.id,
       kind: e.kind,

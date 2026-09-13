@@ -8,6 +8,7 @@ export * from "./filename.js";
 export * from "./storage.js";
 export * from "./claude.js";
 export * from "./render/typst.js";
+export * from "./certifications.js";
 export * from "./stages.js";
 export * from "./reminders.js";
 export * from "./stats.js";

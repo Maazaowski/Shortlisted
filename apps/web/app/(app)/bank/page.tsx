@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, ChevronDown, Plus, Trash2, Upload } from "lucide-react";
 import { withUser } from "@shortlisted/db";
+import { CERTIFICATION_LINE_HINT, EDUCATION_LINE_HINT, formatCertificationLines, formatEducationLines, type Certification, type Education } from "@shortlisted/core";
 import { requireUser } from "@/lib/session";
 import {
   addBulletAction,
@@ -37,6 +38,8 @@ export default async function BankPage() {
   const ratio = bulletCount ? withMetric / bulletCount : 0;
   const links = (p.links as { url: string }[]).map((l) => l.url).join("\n");
   const skillGroups = (p.skillGroups as { name: string; skills: string[] }[]).map((g) => `${g.name}: ${g.skills.join(", ")}`).join("\n");
+  const education = formatEducationLines(p.education as Education[]);
+  const certifications = formatCertificationLines(p.certifications as Certification[]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -51,7 +54,7 @@ export default async function BankPage() {
       </div>
 
       <div className="grid gap-10 lg:grid-cols-[320px_1fr]">
-        <aside className="flex flex-col gap-6 lg:sticky lg:top-20 lg:self-start">
+        <aside className="flex flex-col gap-6 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto">
           <section className="enter" style={{ "--i": 1 } as React.CSSProperties}>
             <h2 className="label">Bank health</h2>
             <div className="mt-2 flex items-baseline gap-2">
@@ -92,6 +95,16 @@ export default async function BankPage() {
                 <span className="field-label">Skill groups</span>
                 <textarea name="skillGroups" defaultValue={skillGroups} className="field" rows={4} placeholder="Backend: node, postgres, prisma" />
                 <span className="hint">One group per line as Name: skill, skill.</span>
+              </label>
+              <label>
+                <span className="field-label">Education</span>
+                <textarea name="education" defaultValue={education} className="field" rows={3} placeholder="BSc | Computer Science | State University | 2014-09 | 2018-06 | 3.7/4.0 | Dean's List" />
+                <span className="hint">{EDUCATION_LINE_HINT}</span>
+              </label>
+              <label>
+                <span className="field-label">Certifications</span>
+                <textarea name="certifications" defaultValue={certifications} className="field" rows={3} placeholder="AWS Certified Developer | Amazon Web Services | 2023-04" />
+                <span className="hint">{CERTIFICATION_LINE_HINT} The model shows the ones that fit each posting.</span>
               </label>
               <Field label="File name format" name="fileNameFormat" defaultValue={p.fileNameFormat} hint="Tokens: {name} {title} {company}" />
               <button className="btn btn-primary mt-1">Save profile</button>

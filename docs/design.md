@@ -103,7 +103,7 @@ onboarding works the same way.
 
 | Table           | Holds                                                                   |
 | --------------- | ----------------------------------------------------------------------- |
-| Profile         | Contact details, base headline and summary, skill groups, education, file name format |
+| Profile         | Contact details, base headline and summary, skill groups, education (with GPA and honours), certifications, file name format |
 | BankEntry       | Roles and projects with dates and organisation                          |
 | BankBullet      | One achievement each: text, skill tags, metric, stable id, inBase flag  |
 | Job             | URL, source host, raw text, parsed posting JSON, content hash           |

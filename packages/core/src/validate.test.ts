@@ -12,6 +12,7 @@ const bank: Bank = {
   summary: "Shipped a ledger used by 40 businesses.",
   skillGroups: [],
   education: [],
+  certifications: [],
   entries: [
     {
       id: "e1",
@@ -31,7 +32,7 @@ const bank: Bank = {
 };
 
 function sel(entries: Selection["entries"], summary = "Backend engineer."): Selection {
-  return { headline: "Engineer", summary, skillGroups: [], entries, coverLetter: "", reasoning: "" };
+  return { headline: "Engineer", summary, skillGroups: [], entries, certifications: [], coverLetter: "", reasoning: "" };
 }
 
 describe("validateSelection", () => {
@@ -88,5 +89,16 @@ describe("helpers", () => {
   });
   it("extracts capitalised and symbol terms", () => {
     expect(extractTerms("Built C# services on .NET with Postgres")).toEqual(["c#", ".net", "postgres"]);
+  });
+});
+
+describe("certifications", () => {
+  it("keeps known ids once and drops unknown ones with a flag", () => {
+    const withCerts: Bank = { ...bank, certifications: [{ id: "c_ok", name: "Cert", issuer: null, date: null, url: null }] };
+    const entry = bank.entries[0]!;
+    const base = sel([{ entryId: entry.id, bullets: [{ id: entry.bullets[0]!.id, rewording: null }] }]);
+    const { selection, flags } = validateSelection(withCerts, { ...base, certifications: ["c_ok", "c_ok", "c_nope"] });
+    expect(selection.certifications).toEqual(["c_ok"]);
+    expect(flags.filter((f) => f.kind === "missing_certification")).toHaveLength(1);
   });
 });

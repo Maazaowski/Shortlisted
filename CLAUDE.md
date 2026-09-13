@@ -76,7 +76,12 @@ run `pnpm --filter @shortlisted/core build` (or `db`) before typechecking an app
 Typst is needed for PDFs. The Docker image has it. On the host: `winget install Typst.Typst`, or
 set `TYPST_BIN`. Without it the worker still stores the selection, diff, flags and cover letter
 text, marks the application DONE with a warning, leaves the stage at SAVED, and the PDF endpoints
-return 409.
+return 409. The template (`packages/core/src/render/typst.ts`) uses Merriweather, bundled in
+`packages/core/fonts` under the OFL; `compileTypst` passes `--font-path` and
+`--ignore-system-fonts`, so the host and the container produce the same PDF. US Letter, single
+column, dark slate ink, centred name with a contact line of Lucide icons, uppercase section
+titles over a hairline, consecutive roles at one organisation grouped under its name with a
+rule down the left.
 
 `.claude/launch.json` defines a `web` preview config for the in-app browser.
 
@@ -123,7 +128,8 @@ Neither ever fails. Because there is no auth, Compose binds every port to `127.0
 ### 2. The model selects, it never invents
 
 The experience bank (`Profile` + `BankEntry` + `BankBullet`) is the only source of claims. The
-select call returns bullet ids plus optional rewordings, not prose. `validateSelection()` in
+select call returns bullet ids plus optional rewordings, not prose, and the ids of the
+certifications worth showing for this posting (`Profile.certifications`, each with an id). `validateSelection()` in
 `packages/core/src/validate.ts` drops any id that is not in the bank and flags any number or
 tool name a rewording adds. Nothing is fixed silently; flags surface to the user. If you loosen
 the validator, the user goes back to proofreading whole documents and the product's promise is
@@ -231,7 +237,7 @@ Check `stop_reason === "refusal"` before reading output (`ModelRefusedError`).
 Verified on 11 Sep 2026: the single-user conversion, the init migration, the seed, the board,
 bank, generate, dashboard and detail pages, `/api/me`, capture and URL lookup without auth, the
 worker retry path, Typst rendering of the template from the seeded bank on the host and inside
-the worker container (Liberation Sans), the reminder rule (created once on board read, closed by
+the worker container, the reminder rule (created once on board read, closed by
 stage change and by the Done button), the dashboard numbers, and the full Compose stack (migrate
 exits 0, web on `WEB_PORT`, worker picks jobs off the shared queue).
 

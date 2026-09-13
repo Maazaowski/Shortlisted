@@ -36,10 +36,22 @@ export const EducationSchema = z.object({
   field: z.string().nullable(),
   start: z.string().nullable(),
   end: z.string().nullable(),
+  gpa: z.string().nullable().describe('As written on the resume, e.g. "3.6/4.0"'),
+  honors: z.string().nullable().describe("Distinctions on this degree, e.g. Dean's List 2019"),
 });
 export type Education = z.infer<typeof EducationSchema>;
 
 export const LinkSchema = z.object({ label: z.string(), url: z.string() });
+
+/** Ids are what a selection cites, the same contract as bullets. */
+export const CertificationSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  issuer: z.string().nullable(),
+  date: z.string().nullable().describe("YYYY-MM or YYYY"),
+  url: z.string().nullable(),
+});
+export type Certification = z.infer<typeof CertificationSchema>;
 
 export const BankSchema = z.object({
   fullName: z.string(),
@@ -51,6 +63,7 @@ export const BankSchema = z.object({
   summary: z.string(),
   skillGroups: z.array(SkillGroupSchema),
   education: z.array(EducationSchema),
+  certifications: z.array(CertificationSchema),
   entries: z.array(BankEntrySchema),
 });
 export type Bank = z.infer<typeof BankSchema>;
@@ -95,6 +108,7 @@ export const SelectionSchema = z.object({
   summary: z.string().describe("Two or three sentences. Only claims supported by the bank."),
   skillGroups: z.array(SkillGroupSchema).describe("Reordered so the most relevant group is first"),
   entries: z.array(SelectedEntrySchema).describe("Every entry worth including, in resume order"),
+  certifications: z.array(z.string()).describe("Ids of certifications that speak to this posting, most relevant first. Empty when none do."),
   coverLetter: z.string().describe("Under 150 words. Plain, specific, no flattery, no buzzword lists."),
   reasoning: z.string().describe("One short paragraph on what was emphasised and why"),
 });
@@ -114,6 +128,7 @@ export const ImportedBankSchema = z.object({
   summary: z.string(),
   skillGroups: z.array(SkillGroupSchema),
   education: z.array(EducationSchema),
+  certifications: z.array(CertificationSchema.omit({ id: true })),
   entries: z.array(
     z.object({
       kind: z.enum(["ROLE", "PROJECT"]),
@@ -140,7 +155,7 @@ export type ImportedBank = z.infer<typeof ImportedBankSchema>;
 // ---------------------------------------------------------------------------
 
 export const ValidationFlagSchema = z.object({
-  kind: z.enum(["missing_bullet", "missing_entry", "added_number", "new_term", "summary_number", "empty"]),
+  kind: z.enum(["missing_bullet", "missing_entry", "missing_certification", "added_number", "new_term", "summary_number", "empty"]),
   bulletId: z.string().nullable(),
   detail: z.string(),
 });

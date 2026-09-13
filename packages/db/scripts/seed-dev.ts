@@ -29,7 +29,8 @@ await withUser(userId, async (tx) => {
         { name: "Frontend", skills: ["react", "next", "tailwind"] },
         { name: "Infra", skills: ["docker", "ci cd", "aws"] },
       ],
-      education: [{ institution: "State University", degree: "BSc", field: "Computer Science", start: "2014-09", end: "2018-06" }],
+      education: [{ institution: "State University", degree: "BSc", field: "Computer Science", start: "2014-09", end: "2018-06", gpa: "3.7/4.0", honors: "Dean's List 2017" }],
+      certifications: [{ id: "c_seed01", name: "AWS Certified Developer, Associate", issuer: "Amazon Web Services", date: "2023-04", url: null }],
     },
     update: {},
   });

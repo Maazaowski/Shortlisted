@@ -10,18 +10,20 @@ import { IMPORT_SYSTEM, PARSE_SYSTEM, SELECT_SYSTEM } from "./prompts.js";
  * as is and the validator drops and flags it, exactly as with the API.
  */
 
-export type Aliases = { entries: Map<string, string>; bullets: Map<string, string> };
+export type Aliases = { entries: Map<string, string>; bullets: Map<string, string>; certifications: Map<string, string> };
 
-/** Deterministic aliases from bank order: entries e1.., bullets b1.. across all entries. */
+/** Deterministic aliases from bank order: entries e1.., bullets b1.. across all entries, certifications c1... */
 export function bankAliases(bank: Bank): Aliases {
   const entries = new Map<string, string>();
   const bullets = new Map<string, string>();
+  const certifications = new Map<string, string>();
   let b = 0;
   bank.entries.forEach((e, i) => {
     entries.set(`e${i + 1}`, e.id);
     for (const bullet of e.bullets) bullets.set(`b${++b}`, bullet.id);
   });
-  return { entries, bullets };
+  bank.certifications.forEach((c, i) => certifications.set(`c${i + 1}`, c.id));
+  return { entries, bullets, certifications };
 }
 
 function renderBank(bank: Bank): string {
@@ -30,6 +32,10 @@ function renderBank(bank: Bank): string {
   lines.push(`Current headline: ${bank.headline}`);
   lines.push(`Current summary: ${bank.summary}`);
   if (bank.skillGroups.length) lines.push(`Skill groups: ${bank.skillGroups.map((g) => `${g.name}: ${g.skills.join(", ")}`).join(" | ")}`);
+  if (bank.certifications.length) {
+    lines.push("Certifications:");
+    bank.certifications.forEach((c, i) => lines.push(`- c${i + 1}: ${[c.name, c.issuer, c.date].filter(Boolean).join(", ")}`));
+  }
   let b = 0;
   bank.entries.forEach((e, i) => {
     const dates = `${e.startDate ?? "?"} to ${e.endDate ?? "present"}`;
@@ -57,6 +63,7 @@ const SELECTION_REPLY_SHAPE = `{
     "summary": "",
     "skillGroups": [{ "name": "", "skills": [] }],
     "entries": [{ "entryId": "e1", "bullets": [{ "id": "b1", "rewording": null }] }],
+    "certifications": ["c1"],
     "coverLetter": ""
   }
 }`;
@@ -72,7 +79,7 @@ export function buildSelectionPrompt(bank: Bank, postingText: string, note?: str
     "## Part 2, select from the bank",
     SELECT_SYSTEM.replace("Return exactly the schema requested.", "").trim(),
     "",
-    "Cite entries as e1, e2 and bullets as b1, b2 exactly as labelled below. Never invent a label.",
+    "Cite entries as e1, e2, bullets as b1, b2 and certifications as c1, c2 exactly as labelled below. Never invent a label.",
     note ? `\nInstruction from the candidate for this regeneration: ${note}` : "",
     "",
     "## Experience bank",
@@ -93,7 +100,7 @@ export function buildSelectionPrompt(bank: Bank, postingText: string, note?: str
 
 const SelectionReplySchema = z.object({
   parsed: ParsedJobSchema,
-  selection: SelectionSchema.extend({ reasoning: z.string().default("") }),
+  selection: SelectionSchema.extend({ reasoning: z.string().default(""), certifications: z.array(z.string()).default([]) }),
 });
 
 export class ManualReplyError extends Error {}
@@ -120,13 +127,14 @@ function describeIssue(err: z.ZodError): string {
 export function parseSelectionReply(text: string, bank: Bank): { parsed: ParsedJob; selection: Selection } {
   const result = SelectionReplySchema.safeParse(extractJson(text));
   if (!result.success) throw new ManualReplyError(describeIssue(result.error));
-  const { entries, bullets } = bankAliases(bank);
+  const { entries, bullets, certifications } = bankAliases(bank);
   const selection: Selection = {
     ...result.data.selection,
     entries: result.data.selection.entries.map((e) => ({
       entryId: entries.get(e.entryId) ?? e.entryId,
       bullets: e.bullets.map((b) => ({ id: bullets.get(b.id) ?? b.id, rewording: b.rewording })),
     })),
+    certifications: result.data.selection.certifications.map((c) => certifications.get(c) ?? c),
   };
   return { parsed: result.data.parsed, selection };
 }
@@ -136,7 +144,8 @@ const IMPORT_REPLY_SHAPE = `{
   "links": [{ "label": "", "url": "" }],
   "headline": "", "summary": "",
   "skillGroups": [{ "name": "", "skills": [] }],
-  "education": [{ "institution": "", "degree": "", "field": null, "start": null, "end": null }],
+  "education": [{ "institution": "", "degree": "", "field": null, "start": null, "end": null, "gpa": null, "honors": null }],
+  "certifications": [{ "name": "", "issuer": null, "date": null, "url": null }],
   "entries": [{
     "kind": "ROLE|PROJECT", "organization": "", "title": "", "location": null,
     "startDate": "YYYY-MM", "endDate": null, "url": null,

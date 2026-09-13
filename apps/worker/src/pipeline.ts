@@ -44,7 +44,8 @@ export async function runGeneration(job: GenerateJob): Promise<void> {
     // Manual provider: the user pasted the parsed posting and the selection,
     // so there are no model calls in this run. The parse landed on the job
     // when the reply was accepted; the selection waits on the application.
-    const pasted = ctx.app.pendingSelection ? SelectionSchema.parse(ctx.app.pendingSelection) : null;
+    // Replies pasted before certifications existed have no list; treat that as none.
+    const pasted = ctx.app.pendingSelection ? SelectionSchema.parse({ certifications: [], ...(ctx.app.pendingSelection as object) }) : null;
 
     // 1. Parse (skipped when a previous run already parsed this job).
     let parsed: ParsedJob;

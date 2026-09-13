@@ -12,6 +12,7 @@ const bank: Bank = {
   summary: "Builds things.",
   skillGroups: [{ name: "Backend", skills: ["node", "postgres"] }],
   education: [],
+  certifications: [],
   entries: [
     {
       id: "cuid_entry_a",
@@ -121,9 +122,22 @@ describe("import prompt and reply", () => {
         summary: "S",
         skillGroups: [],
         education: [],
+        certifications: [],
         entries: [{ kind: "ROLE", organization: "O", title: "T", location: null, startDate: "2020-01", endDate: null, url: null, bullets: [{ text: "Did a thing", skills: ["x"], metric: null }] }],
       }),
     );
     expect(imported.entries[0]?.bullets[0]?.text).toBe("Did a thing");
+  });
+});
+
+describe("certification aliases", () => {
+  it("labels certifications c1.. in the prompt and maps them back", () => {
+    const withCerts: Bank = { ...bank, certifications: [{ id: "cuid_cert", name: "Cloud Cert", issuer: "Vendor", date: "2024", url: null }] };
+    expect(buildSelectionPrompt(withCerts, "posting")).toContain("- c1: Cloud Cert, Vendor, 2024");
+    const reply = {
+      parsed: { isJobPosting: true, title: "T", company: "C", location: null, seniority: "senior", mustHaveSkills: [], niceToHaveSkills: [], keywords: [], responsibilities: [], yearsExperience: null },
+      selection: { headline: "H", summary: "S", skillGroups: [], entries: [], certifications: ["c1", "c9"], coverLetter: "x" },
+    };
+    expect(parseSelectionReply(JSON.stringify(reply), withCerts).selection.certifications).toEqual(["cuid_cert", "c9"]);
   });
 });

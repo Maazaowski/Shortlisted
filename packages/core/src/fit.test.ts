@@ -12,6 +12,7 @@ const bank: Bank = {
   summary: "Backend engineer.",
   skillGroups: [{ name: "Backend", skills: ["Node.js", "PostgreSQL", "Prisma"] }],
   education: [],
+  certifications: [],
   entries: [
     {
       id: "e1",

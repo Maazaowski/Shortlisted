@@ -32,8 +32,10 @@ model Profile {
   summary        String
   /// [{ name: "Backend", skills: ["Node", "Postgres"] }]
   skillGroups    Json     @default("[]")
-  /// [{ institution, degree, field, start, end }]
+  /// [{ institution, degree, field, start, end, gpa, honors }]
   education      Json     @default("[]")
+  /// [{ id, name, issuer, date, url }]. A selection cites certifications by id, like bullets.
+  certifications Json     @default("[]")
   /// Tokens: {name} {title} {company}
   fileNameFormat String   @default("{name} - {title} - {company}.pdf")
   createdAt      DateTime @default(now())

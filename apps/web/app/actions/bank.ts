@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { normalizeSkills } from "@shortlisted/core";
+import { normalizeSkills, parseCertificationLines, parseEducationLines, type Certification } from "@shortlisted/core";
 import { withUser } from "@shortlisted/db";
 import { requireUser } from "@/lib/session";
 
@@ -15,8 +15,10 @@ function opt(form: FormData, key: string): string | null {
 
 export async function updateProfileAction(form: FormData) {
   const user = await requireUser();
-  await withUser(user.id, (tx) =>
-    tx.profile.update({
+  await withUser(user.id, async (tx) => {
+    const current = await tx.profile.findUnique({ where: { userId: user.id }, select: { certifications: true } });
+    const existing = (current?.certifications ?? []) as Certification[];
+    await tx.profile.update({
       where: { userId: user.id },
       data: {
         fullName: str(form, "fullName"),
@@ -39,9 +41,11 @@ export async function updateProfileAction(form: FormData) {
             const [name, rest] = line.split(":");
             return { name: (name ?? "").trim(), skills: (rest ?? "").split(",").map((s) => s.trim()).filter(Boolean) };
           }),
+        education: parseEducationLines(str(form, "education")),
+        certifications: parseCertificationLines(str(form, "certifications"), existing),
       },
-    }),
-  );
+    });
+  });
   revalidatePath("/bank");
 }
 

@@ -109,6 +109,16 @@ export function validateSelection(bank: Bank, selection: Selection): ValidatedSe
     })
     .filter((se) => se.bullets.length > 0);
 
+  const certIds = new Set(bank.certifications.map((c) => c.id));
+  const seenCerts = new Set<string>();
+  const certifications = selection.certifications.filter((id) => {
+    if (seenCerts.has(id)) return false;
+    seenCerts.add(id);
+    if (certIds.has(id)) return true;
+    flags.push({ kind: "missing_certification", bulletId: null, detail: `Certification ${id} is not in the bank; dropped.` });
+    return false;
+  });
+
   for (const n of extractNumbers(selection.summary)) {
     if (!bankNumbers.has(n)) {
       flags.push({ kind: "summary_number", bulletId: null, detail: `Summary mentions "${n}", which is not in the bank.` });
@@ -120,7 +130,7 @@ export function validateSelection(bank: Bank, selection: Selection): ValidatedSe
   }
 
   return {
-    selection: { ...selection, entries },
+    selection: { ...selection, entries, certifications },
     flags,
   };
 }

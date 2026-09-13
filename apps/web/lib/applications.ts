@@ -192,6 +192,7 @@ async function loadBankFor(tx: Tx, userId: string): Promise<Bank | null> {
     summary: profile.summary,
     skillGroups: profile.skillGroups,
     education: profile.education,
+    certifications: profile.certifications,
     entries: entries.map((e) => ({
       id: e.id,
       kind: e.kind,
