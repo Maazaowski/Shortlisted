@@ -112,6 +112,19 @@ export function extractPage(): Capture {
     if (!text) text = t;
   }
 
+  // LinkedIn's fixed UI strings around the posting (buttons, the match teaser) have no
+  // stable container in every layout, so they are dropped by line instead.
+  if (site("linkedin.com")) {
+    const ui =
+      /^(Apply|Easy Apply|Save|Share|Show more options|Show match details|Tailor my resume|Help me stand out|Create cover letter|BETA|Is this information helpful\?|Use AI to assess how you fit|Looking for talent\?|Post a job|Save .+ at .+|Promoted by hirer.*|Responses managed off LinkedIn|You.d be a top applicant.*|Your profile( and resume)? (seems? to )?match.*|… more|See more|Show less)$/;
+    text = tidy(
+      text
+        .split("\n")
+        .filter((line) => !ui.test(line.trim()))
+        .join("\n"),
+    );
+  }
+
   return { url: location.href, pageTitle: document.title, jsonLd: ld.length ? ld : null, text: text.slice(0, 60_000) };
 }
 
