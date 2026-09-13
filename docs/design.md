@@ -57,7 +57,10 @@ A page the user has already captured reopens the existing result instead of runn
 
 **Reading the page.** Most job sites embed a JSON-LD `JobPosting` block. The panel reads that
 first. When it is missing, it sends the page's visible text and the parser extracts the posting.
-The URL goes with both, for dedupe and for the record.
+That text is not the whole page: on LinkedIn and Indeed the panel joins the posting's own blocks
+(top card and description) and otherwise takes the narrowest container that holds the posting,
+minus known noise such as the result list, site navigation, premium insights, the company blurb
+and similar jobs. The URL goes with both, for dedupe and for the record.
 
 **Attach.** Finds the resume file input on the current page and sets the PDF on it. Works on
 standard inputs (Greenhouse, Lever, most company portals). Custom uploaders need the file
