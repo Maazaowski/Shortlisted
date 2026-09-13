@@ -56,6 +56,7 @@ pnpm worker                   # tsx watch, separate terminal
 pnpm ext:build                # then load apps/extension/dist in chrome://extensions
 pnpm --filter @shortlisted/extension dev    # esbuild watch with inline sourcemaps
 pnpm --filter @shortlisted/extension icons  # regenerate PNGs after editing icons/icon.svg
+CHROME_BIN=<chrome-for-testing> pnpm --filter @shortlisted/extension e2e   # see below
 
 pnpm typecheck                # every workspace (builds db and core first)
 pnpm test                     # vitest, packages/core only
@@ -78,6 +79,16 @@ text, marks the application DONE with a warning, leaves the stage at SAVED, and 
 return 409.
 
 `.claude/launch.json` defines a `web` preview config for the in-app browser.
+
+**Extension end-to-end test.** `apps/extension/e2e/run.mjs` launches a throwaway Chrome with
+`apps/extension/dist` loaded, opens a local fixture posting (`e2e/fixtures/ledgerly.html`, with a
+JSON-LD block and an application form), runs the panel page as a background tab in the same
+window, and drives capture, prompt, pasted reply (`e2e/fixtures/reply.json`), generation, Attach
+into the form, and a stage change over the DevTools protocol. It needs the web app in manual mode
+on `API_BASE` (default `http://localhost:3010`), a worker consuming the queue, and `CHROME_BIN`
+pointing at a Chrome for Testing binary (`npx @puppeteer/browsers install chrome@stable`), because
+branded Chrome ignores `--load-extension`. Screenshots land in `apps/extension/e2e/out/`. Pass
+`--headed` to watch it.
 
 ## Environment and config
 
@@ -230,11 +241,10 @@ both PDFs rendered, stage GENERATED; bad pastes return sentence errors; Regenera
 WAITING with the note in the prompt).
 
 Not yet verified, because no `ANTHROPIC_API_KEY` was available: the anthropic provider's parse,
-select and import calls. Also not yet
-verified: the extension loaded in Chrome (capture, the panel states, Attach on a real form).
-First thing to do in a new session with a key: set it in `.env`, `docker compose up -d`, import
-a real resume at `/onboarding`, paste a posting at `/generate`, watch `docker compose logs -f
-worker`, then load the extension and capture a live posting.
+select and import calls. The extension
+was verified on 13 Sep 2026 by the e2e script above: capture from a JSON-LD page, the waiting
+state, pasted reply, generation, Attach filling a file input and cover letter textarea, Mark
+Applied. Not yet tried on a live Greenhouse or Lever page.
 
 Build order from `docs/design.md`: 1 to 6 done as above, 7 (billing) dropped.
 

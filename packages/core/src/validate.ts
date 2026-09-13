@@ -32,6 +32,8 @@ export function extractTerms(text: string): string[] {
   for (const raw of text.split(/[\s,;()]+/)) {
     const t = raw.replace(/^[^A-Za-z0-9.#+]+|[^A-Za-z0-9.#+]+$/g, "");
     if (!t) continue;
+    // Bare numbers are the number check's job; flagging them here too would duplicate the flag.
+    if (/^\d+([.,]\d+)?[%x]?$/.test(t)) continue;
     const looksLikeTerm = /^[A-Z]/.test(t) || /[.#+]/.test(t) || /\d/.test(t);
     if (!looksLikeTerm) continue;
     if (STOP.has(t.toLowerCase())) continue;

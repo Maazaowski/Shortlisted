@@ -1,4 +1,4 @@
-import { api, DEFAULT_API_BASE, loadSettings, saveSettings, type Settings } from "./api";
+import { api, ApiError, DEFAULT_API_BASE, loadSettings, saveSettings, type Settings } from "./api";
 import { attachFiles, extractPage, type AttachResult } from "./page-scripts";
 import { STAGES, STAGE_LABEL, VERDICT_LABEL, type ApplicationView, type Capture, type Stage } from "./types";
 
@@ -199,7 +199,7 @@ function esc(s: string) {
 }
 
 function verdictPill(a: ApplicationView) {
-  if (!a.fitVerdict) return `<span class="pill muted">Scoring</span>`;
+  if (!a.fitVerdict) return `<span class="pill muted">Not scored</span>`;
   const cls = a.fitVerdict === "POOR" ? "bad" : a.fitVerdict === "POSSIBLE" ? "warn" : "good";
   return `<span class="pill ${cls}">${VERDICT_LABEL[a.fitVerdict]}${a.fitScore != null ? ` · ${a.fitScore}` : ""}</span>`;
 }
@@ -285,7 +285,25 @@ function render() {
       btn.textContent = "Copied";
       setTimeout(() => (btn.textContent = "Copy prompt"), 1500);
     } catch (err) {
-      status((err as Error).message, true);
+      if (err instanceof ApiError) {
+        status(err.message, true);
+      } else {
+        // Clipboard access needs a focused document. Show the prompt in the panel
+        // instead; opening a tab would switch the panel away from this page.
+        let ta = box.querySelector<HTMLTextAreaElement>("#prompt-text");
+        if (!ta) {
+          ta = document.createElement("textarea");
+          ta.id = "prompt-text";
+          ta.rows = 6;
+          ta.readOnly = true;
+          ta.style.marginTop = "8px";
+          btn.parentElement!.insertAdjacentElement("afterend", ta);
+        }
+        ta.value = await api.prompt(settings, a.id);
+        ta.focus();
+        ta.select();
+        status("Clipboard blocked. The prompt is selected below; press Ctrl+C.");
+      }
     } finally {
       btn.disabled = false;
     }
@@ -297,6 +315,7 @@ function render() {
     out.textContent = "Checking";
     try {
       current = await api.reply(settings, a.id, text);
+      status("Reply accepted. Rendering.");
       render();
       startPolling(a.id);
     } catch (err) {

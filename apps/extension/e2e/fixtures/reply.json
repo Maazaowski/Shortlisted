@@ -1,0 +1,111 @@
+Here is the JSON:
+```json
+{
+  "parsed": {
+    "isJobPosting": true,
+    "title": "Staff Backend Engineer",
+    "company": "Ledgerly",
+    "location": "Remote",
+    "seniority": "staff",
+    "mustHaveSkills": [
+      "postgres",
+      "typescript",
+      "node",
+      "docker"
+    ],
+    "niceToHaveSkills": [
+      "kubernetes",
+      "aws"
+    ],
+    "keywords": [
+      "payments ledger",
+      "multi-currency accounting",
+      "mentoring"
+    ],
+    "responsibilities": [
+      "Own the ledger service",
+      "Design multi-currency accounting",
+      "Mentor engineers"
+    ],
+    "yearsExperience": null
+  },
+  "selection": {
+    "headline": "Staff Backend Engineer",
+    "summary": "Backend engineer who builds payment ledgers on Postgres and TypeScript. Introduced row-level security across a multi-tenant system and containerised deploys with Docker.",
+    "skillGroups": [
+      {
+        "name": "Backend",
+        "skills": [
+          "postgres",
+          "typescript",
+          "node",
+          "prisma",
+          "nestjs"
+        ]
+      },
+      {
+        "name": "Infra",
+        "skills": [
+          "docker",
+          "ci cd",
+          "aws"
+        ]
+      },
+      {
+        "name": "Frontend",
+        "skills": [
+          "react",
+          "next",
+          "tailwind"
+        ]
+      }
+    ],
+    "entries": [
+      {
+        "entryId": "e1",
+        "bullets": [
+          {
+            "id": "b1",
+            "rewording": "Designed and built a double-entry ledger with multi-currency FX on Postgres, used by 40 businesses"
+          },
+          {
+            "id": "b3",
+            "rewording": null
+          },
+          {
+            "id": "b2",
+            "rewording": "Cut invoice extraction time by 40% across 3 pipelines with PDF fingerprinting"
+          },
+          {
+            "id": "b4",
+            "rewording": null
+          }
+        ]
+      },
+      {
+        "entryId": "e2",
+        "bullets": [
+          {
+            "id": "b6",
+            "rewording": null
+          },
+          {
+            "id": "b5",
+            "rewording": null
+          }
+        ]
+      },
+      {
+        "entryId": "e3",
+        "bullets": [
+          {
+            "id": "b7",
+            "rewording": null
+          }
+        ]
+      }
+    ],
+    "coverLetter": "Dear hiring team,\n\nI build payment ledgers on Postgres and would like to do that for Ledgerly. At Acme Payments I built the double-entry ledger with multi-currency FX that 40 businesses run on, and introduced row-level security across every tenant table. I containerised 12 services with Docker at Widget Co. I would welcome a conversation about the ledger service.\n\nSample Person"
+  }
+}
+```

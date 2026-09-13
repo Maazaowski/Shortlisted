@@ -41,6 +41,11 @@ describe("validateSelection", () => {
     expect(r.flags.some((f) => f.kind === "missing_bullet")).toBe(true);
   });
 
+  it("flags an added number once, not again as a term", () => {
+    const r = validateSelection(bank, sel([{ entryId: "e1", bullets: [{ id: "b1", rewording: "Cut invoice extraction time by 40% across 3 pipelines using PyMuPDF fingerprints" }] }]));
+    expect(r.flags.filter((f) => f.detail.includes('"3"')).map((f) => f.kind)).toEqual(["added_number"]);
+  });
+
   it("flags a number that was not in the original", () => {
     const r = validateSelection(
       bank,
