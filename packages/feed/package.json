@@ -1,0 +1,19 @@
+{
+  "name": "@shortlisted/feed",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build-feed": "tsx src/build.ts",
+    "check-boards": "tsx src/check.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@shortlisted/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.2",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3"
+  }
+}

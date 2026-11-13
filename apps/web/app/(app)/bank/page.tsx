@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ChevronDown, Plus, Trash2, Upload } from "lucide-react";
+import { ArrowRight, ChevronDown, ListChecks, Plus, Trash2, Upload } from "lucide-react";
 import { withUser } from "@shortlisted/db";
 import { CERTIFICATION_LINE_HINT, EDUCATION_LINE_HINT, formatCertificationLines, formatEducationLines, type Certification, type Education } from "@shortlisted/core";
 import { requireUser } from "@/lib/session";
@@ -48,9 +48,14 @@ export default async function BankPage() {
           <h1 className="display text-[34px]">Experience bank</h1>
           <p className="mt-2 max-w-2xl text-ink-2">The only source the model may draw from. Everything on a tailored resume traces back to a bullet here.</p>
         </div>
-        <Link href="/onboarding" className="btn">
-          <Upload size={14} strokeWidth={1.75} /> Import a resume
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/bank/check" className="btn">
+            <ListChecks size={14} strokeWidth={1.75} /> Check my CV
+          </Link>
+          <Link href="/onboarding" className="btn">
+            <Upload size={14} strokeWidth={1.75} /> Import a resume
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-10 lg:grid-cols-[320px_1fr]">

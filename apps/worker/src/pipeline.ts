@@ -13,6 +13,7 @@ import {
   scoreFit,
   selectForJob,
   storageFromEnv,
+  validateCoverLetter,
   validateSelection,
   type ParsedJob,
 } from "@shortlisted/core";
@@ -72,7 +73,7 @@ export async function runGeneration(job: GenerateJob): Promise<void> {
     await withUser(userId, (tx) =>
       tx.application.update({
         where: { id: applicationId },
-        data: { fitVerdict: fit.verdict, fitScore: fit.score, gaps: fit.gaps },
+        data: { fitVerdict: fit.verdict, fitScore: fit.score, gaps: fit.gaps, covered: fit.covered, niceToHaveCovered: fit.niceToHaveCovered },
       }),
     );
     // A poor fit stops the pipeline to save the select call. With a pasted
@@ -136,7 +137,7 @@ export async function runGeneration(job: GenerateJob): Promise<void> {
           type: "COVER_LETTER",
           version,
           selection: { text: selection.coverLetter } as Prisma.InputJsonValue,
-          flags: [],
+          flags: validateCoverLetter(ctx.bank, selection.coverLetter, [parsed.title, parsed.company, parsed.location ?? ""]) as unknown as Prisma.InputJsonValue,
           fileName: coverFileName,
           fileKey: coverKey,
         },

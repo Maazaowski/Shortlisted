@@ -1,0 +1,107 @@
+# The companies whose job boards the feed reads. This file is the curation.
+#
+# One company per line:
+#   - { ats: greenhouse, board: gitlab, name: GitLab }
+#
+#   ats    the job board system: greenhouse, lever, ashby, workable or recruitee
+#   board  the company's id on that system, the part of its jobs page address
+#          that names the company (boards.greenhouse.io/gitlab -> gitlab)
+#   name   the company's name as people know it. For UK roles it is also
+#          compared with the register of licensed visa sponsors.
+#
+# To add a company, add a line and run:
+#   pnpm --filter @shortlisted/feed check-boards
+# A board that stops answering is skipped by the build and reported in its log.
+
+# Remote-first and distributed
+- { ats: greenhouse, board: gitlab, name: GitLab }
+- { ats: greenhouse, board: canonical, name: Canonical }
+- { ats: greenhouse, board: remotecom, name: Remote }
+- { ats: greenhouse, board: wikimedia, name: Wikimedia Foundation }
+- { ats: greenhouse, board: mozilla, name: Mozilla }
+- { ats: greenhouse, board: grafanalabs, name: Grafana Labs }
+- { ats: greenhouse, board: elastic, name: Elastic }
+- { ats: greenhouse, board: sourcegraph91, name: Sourcegraph }
+- { ats: greenhouse, board: netlify, name: Netlify }
+- { ats: greenhouse, board: vercel, name: Vercel }
+- { ats: greenhouse, board: mongodb, name: MongoDB }
+- { ats: greenhouse, board: cloudflare, name: Cloudflare }
+- { ats: greenhouse, board: datadog, name: Datadog }
+- { ats: greenhouse, board: stripe, name: Stripe }
+- { ats: greenhouse, board: twilio, name: Twilio }
+- { ats: greenhouse, board: okta, name: Okta }
+- { ats: greenhouse, board: dropbox, name: Dropbox }
+- { ats: greenhouse, board: figma, name: Figma }
+- { ats: greenhouse, board: discord, name: Discord }
+- { ats: greenhouse, board: reddit, name: Reddit }
+- { ats: greenhouse, board: coinbase, name: Coinbase }
+- { ats: greenhouse, board: airbnb, name: Airbnb }
+- { ats: greenhouse, board: duolingo, name: Duolingo }
+- { ats: greenhouse, board: gusto, name: Gusto }
+- { ats: greenhouse, board: airtable, name: Airtable }
+- { ats: greenhouse, board: webflow, name: Webflow }
+- { ats: greenhouse, board: instacart, name: Instacart }
+- { ats: greenhouse, board: databricks, name: Databricks }
+- { ats: greenhouse, board: cockroachlabs, name: Cockroach Labs }
+- { ats: greenhouse, board: planetscale, name: PlanetScale }
+- { ats: greenhouse, board: circleci, name: CircleCI }
+- { ats: greenhouse, board: pagerduty, name: PagerDuty }
+- { ats: greenhouse, board: fivetran, name: Fivetran }
+- { ats: greenhouse, board: samsara, name: Samsara }
+- { ats: greenhouse, board: brex, name: Brex }
+- { ats: greenhouse, board: affirm, name: Affirm }
+- { ats: greenhouse, board: consensys, name: Consensys }
+- { ats: greenhouse, board: scaleai, name: Scale AI }
+- { ats: greenhouse, board: anthropic, name: Anthropic }
+- { ats: greenhouse, board: wise, name: Wise }
+- { ats: greenhouse, board: monzo, name: Monzo }
+- { ats: greenhouse, board: deliveroo, name: Deliveroo }
+- { ats: greenhouse, board: n26, name: N26 }
+- { ats: greenhouse, board: getyourguide, name: GetYourGuide }
+- { ats: greenhouse, board: hellofresh, name: HelloFresh }
+- { ats: greenhouse, board: contentful, name: Contentful }
+- { ats: greenhouse, board: adyen, name: Adyen }
+- { ats: greenhouse, board: typeform, name: Typeform }
+- { ats: greenhouse, board: sumup, name: SumUp }
+- { ats: greenhouse, board: celonis, name: Celonis }
+- { ats: greenhouse, board: traderepublic, name: Trade Republic }
+- { ats: lever, board: spotify, name: Spotify }
+- { ats: lever, board: palantir, name: Palantir }
+- { ats: lever, board: outreach, name: Outreach }
+- { ats: lever, board: zoox, name: Zoox }
+- { ats: lever, board: binance, name: Binance }
+- { ats: lever, board: crypto, name: Crypto.com }
+- { ats: lever, board: toptal, name: Toptal }
+- { ats: lever, board: paytm, name: Paytm }
+- { ats: lever, board: veeva, name: Veeva Systems }
+- { ats: ashby, board: linear, name: Linear }
+- { ats: ashby, board: ashby, name: Ashby }
+- { ats: ashby, board: deel, name: Deel }
+- { ats: ashby, board: notion, name: Notion }
+- { ats: ashby, board: ramp, name: Ramp }
+- { ats: ashby, board: openai, name: OpenAI }
+- { ats: ashby, board: supabase, name: Supabase }
+- { ats: ashby, board: posthog, name: PostHog }
+- { ats: ashby, board: replit, name: Replit }
+- { ats: ashby, board: vanta, name: Vanta }
+- { ats: ashby, board: oyster, name: Oyster }
+- { ats: ashby, board: zapier, name: Zapier }
+- { ats: ashby, board: cursor, name: Cursor }
+- { ats: ashby, board: elevenlabs, name: ElevenLabs }
+- { ats: ashby, board: sentry, name: Sentry }
+- { ats: ashby, board: 1password, name: 1Password }
+- { ats: ashby, board: kong, name: Kong }
+- { ats: ashby, board: docker, name: Docker }
+- { ats: ashby, board: snowflake, name: Snowflake }
+- { ats: ashby, board: plain, name: Plain }
+- { ats: ashby, board: n8n, name: n8n }
+- { ats: ashby, board: lovable, name: Lovable }
+- { ats: ashby, board: airwallex, name: Airwallex }
+
+# Gulf employers
+- { ats: greenhouse, board: careem, name: Careem }
+- { ats: greenhouse, board: tamara, name: Tamara }
+- { ats: ashby, board: ziina, name: Ziina }
+- { ats: workable, board: blueground, name: Blueground }
+- { ats: workable, board: foodics, name: Foodics }
+- { ats: recruitee, board: bunq, name: bunq }

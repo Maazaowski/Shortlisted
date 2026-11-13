@@ -11,10 +11,13 @@ const execFileAsync = promisify(execFile);
 /**
  * Bundled fonts, next to `src` and `dist`. Typst is pointed at this directory
  * only. Resolved on demand: the web app bundles this module and rewrites
- * `import.meta`, but only the worker ever compiles.
+ * `import.meta`, so there the directory is found from the working directory,
+ * `apps/web`, the same assumption `apps/web/lib/storage.ts` makes. The web
+ * app compiles only when the user saves an edited cover letter.
  */
 export function fontDir(): string {
-  return path.resolve(import.meta.dirname, "../../fonts");
+  const here: string | undefined = import.meta.dirname;
+  return here ? path.resolve(here, "../../fonts") : path.resolve(process.cwd(), "../../packages/core/fonts");
 }
 
 /** Escape text for Typst markup. */

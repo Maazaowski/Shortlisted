@@ -41,10 +41,15 @@ export type ApplicationView = {
   fitVerdict: Verdict | null;
   fitScore: number | null;
   gaps: string[];
+  covered: string[];
+  niceToHaveCovered: string[];
   rejectionReason: string | null;
+  contact: { name: string | null; email: string | null; url: string | null };
+  interviewAt: string | null;
+  deadlineAt: string | null;
   job: { id: string; url: string | null; title: string | null; company: string | null; sourceHost: string | null };
   resume: { id: string; version: number; fileName: string; hasFile: boolean; flags: ValidationFlag[]; diff: ResumeDiff | null } | null;
-  coverLetter: { id: string; version: number; fileName: string; hasFile: boolean; text: string } | null;
+  coverLetter: { id: string; version: number; fileName: string; hasFile: boolean; text: string; flags: ValidationFlag[]; edited: boolean } | null;
   events: { id: string; fromStage: Stage | null; toStage: Stage; note: string | null; createdAt: string }[];
   notes: { id: string; body: string; createdAt: string }[];
   reminders: { id: string; rule: string; dueAt: string; doneAt: string | null }[];

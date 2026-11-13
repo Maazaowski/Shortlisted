@@ -67,30 +67,60 @@ Light and dark, three accent colours, chosen from Appearance in the header.
 
 ## Quick start
 
-You need [Docker Desktop](https://www.docker.com/products/docker-desktop/), [Node 22+](https://nodejs.org/) with pnpm (only to build the extension), and Chrome.
+You need two things: [Docker Desktop](https://www.docker.com/products/docker-desktop/), installed and open, and Chrome. Nothing else.
+
+**1. Get Shortlisted.** On the GitHub page, click the green Code button, then Download ZIP, and unzip it. If you use Git, clone it instead:
 
 ```bash
 git clone https://github.com/Maazaowski/Shortlisted.git
-cd Shortlisted
-cp .env.example .env            # nothing to edit for a first run
-docker compose up -d --build    # Postgres, migrations, web app, worker. The first build takes a few minutes.
 ```
 
-Open **http://localhost:3000**.
+**2. Run the setup command** in a terminal opened in the Shortlisted folder.
 
-1. **Import your resume.** Drop the PDF or Word document you send today. Every bullet becomes an entry in your bank.
-2. **Refine the bank.** Add what the resume left out. Bullets with numbers are the ones the model reaches for first.
-3. **Load the extension.**
-   ```bash
-   pnpm install
-   pnpm ext:build
-   ```
-   Go to `chrome://extensions`, turn on Developer mode, click Load unpacked, choose `apps/extension/dist`.
-4. **Open a job posting and click the Shortlisted icon.**
+Windows (PowerShell):
 
-That is the whole setup. If port 3000 is taken, set `WEB_PORT` in `.env`, run `docker compose up -d` again, and put the same address under Settings in the side panel.
+```bash
+powershell -ExecutionPolicy Bypass -File setup.ps1
+```
 
-## Two ways to run the model
+macOS or Linux:
+
+```bash
+bash setup.sh
+```
+
+It checks Docker, picks a free port, asks how you want to reach a model, downloads the app, starts it, and opens it in your browser. The first run downloads about 1 GB. If you chose your Claude or ChatGPT subscription, it also walks you through signing in once.
+
+**3. Follow the checklist** that opens in your browser. It has four rows and checks each one for real:
+
+1. **A model.** Your Claude or ChatGPT subscription, or copy and paste.
+2. **Your resume.** Upload the PDF or Word document you send today. Every bullet becomes an entry in your bank. The file is not kept.
+3. **Your settings.** The country you live in, your passport, and the roles you want.
+4. **The Chrome extension.** Download `shortlisted-extension.zip` from the [latest release](https://github.com/Maazaowski/Shortlisted/releases/latest), unzip it, open `chrome://extensions`, turn on Developer mode, click Load unpacked, and choose the unzipped folder.
+
+Then open a job posting and click the Shortlisted icon.
+
+### Stopping, starting and updating
+
+Run these in the Shortlisted folder.
+
+```bash
+docker compose down
+```
+
+stops it. Your data is kept.
+
+```bash
+docker compose up -d
+```
+
+starts it again. To update, run the next command and then start it again. Settings shows a notice when a newer version exists.
+
+```bash
+docker compose pull
+```
+
+## Three ways to run the model
 
 Shortlisted needs a language model for two things: turning your resume into the bank, and picking bullets for a posting. You choose how that model is reached.
 
@@ -99,6 +129,32 @@ Shortlisted needs a language model for two things: turning your resume into the 
 With no API key set, each capture gives you a prompt and a paste box. Copy the prompt, paste it into [Claude](https://claude.ai) or any capable model, paste the JSON reply back. Validation, the diff, flags and the PDF then run exactly as they would after an API call. One round trip, about a minute, no spend. Works on any Claude plan.
 
 The prompt shows your bank with short labels (`e1`, `b3`) so nothing gets mangled in the paste, and the reply is checked before anything is written. A bad paste tells you what is wrong in one sentence.
+
+### Your Claude or ChatGPT subscription, automatic
+
+If you pay for Claude or ChatGPT, Shortlisted can use that subscription through the official command line tool, Claude Code or Codex. Both are already inside the Docker image. Nothing is pasted and there is no per-capture charge; each capture counts against your plan's normal usage limits.
+
+Pick one in `.env`:
+
+```bash
+SHORTLISTED_PROVIDER=claude-cli     # or codex-cli
+```
+
+Start the stack, then sign in once. The command prints a link. Open it in your browser, sign in, and paste the code back into the terminal.
+
+```bash
+docker compose up -d --force-recreate web worker
+```
+
+```bash
+docker compose exec worker claude auth login
+```
+
+For Codex the sign-in is `docker compose exec worker codex login --device-auth`. Device code sign-in has to be switched on in your ChatGPT security settings first.
+
+The sign-in is kept in a Docker volume on your machine (`cli_auth`) and nowhere else. Treat it like a password. `docker compose down -v` removes it along with the database. The tool runs with no file or web access and only ever receives the prompt text. If a sign-in expires, the application shows the error in a sentence; sign in again and press Regenerate.
+
+You sign in to the unmodified tool with your own account, for your own use, on your own machine. Read your plan's terms if you are unsure that this fits them. Paste mode and an API key are always available instead.
 
 ### Anthropic API, automatic
 

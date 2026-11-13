@@ -1,6 +1,8 @@
 import { STAGES, STAGE_LABEL, VERDICT_LABEL } from "@shortlisted/core";
 import { requireUser } from "@/lib/session";
+import Link from "next/link";
 import { dashboardStats } from "@/lib/stats";
+import { getPreferences } from "@/lib/preferences";
 import { StageDot, STAGE_VAR } from "@/components/badges";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +15,9 @@ function weekLabel(iso: string) {
 
 export default async function DashboardPage() {
   const user = await requireUser();
-  const stats = await dashboardStats(user.id);
+  const [stats, { prefs }] = await Promise.all([dashboardStats(user.id), getPreferences(user.id)]);
+  const thisWeek = stats.perWeek.at(-1)?.count ?? 0;
+  const goal = prefs.weeklyGoal;
   const appliedTotal = stats.perWeek.reduce((n, w) => n + w.count, 0);
   const maxWeek = Math.max(1, ...stats.perWeek.map((w) => w.count));
   const sent = VERDICTS.reduce((n, v) => n + stats.byVerdict[v].applied, 0);
@@ -39,6 +43,23 @@ export default async function DashboardPage() {
       <div className="grid gap-10 lg:grid-cols-3">
         <section className="enter" style={{ "--i": 2 } as React.CSSProperties}>
           <h2 className="label">Applied per week</h2>
+          {goal ? (
+            <div className="mt-3">
+              <p className="text-[13px] text-ink-2">
+                This week: <span className="num text-ink">{thisWeek}</span> of <span className="num text-ink">{goal}</span>. {thisWeek >= goal ? "Goal met." : `${goal - thisWeek} to go.`}
+              </p>
+              <div className="progress mt-1.5" role="img" aria-label={`${thisWeek} of ${goal} applications this week`}>
+                <span style={{ width: `${Math.min(100, (thisWeek / goal) * 100)}%` }} />
+              </div>
+            </div>
+          ) : (
+            <p className="mt-3 text-[13px] text-ink-2">
+              <Link href="/settings" className="underline">
+                Set a weekly goal
+              </Link>{" "}
+              to see this week against it.
+            </p>
+          )}
           <div className="mt-5 flex h-32 items-end gap-1.5" role="img" aria-label={`Applications per week: ${stats.perWeek.map((w) => `${weekLabel(w.weekStart)} ${w.count}`).join(", ")}`}>
             {stats.perWeek.map((w, i) => (
               <div key={w.weekStart} className="flex h-full flex-1 flex-col justify-end" title={`${weekLabel(w.weekStart)}: ${w.count}`}>

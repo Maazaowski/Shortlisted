@@ -146,7 +146,17 @@ model Application {
   fitVerdict       Verdict?
   fitScore         Int?
   gaps             String[]         @default([])
+  /// Must-have skills the bank covers, and nice-to-haves it covers. With `gaps`, the whole of FitResult.
+  covered          String[]         @default([])
+  niceToHaveCovered String[]       @default([])
   rejectionReason  String?
+  /// Who the user is dealing with at the company. Typed by the user, never guessed.
+  contactName      String?
+  contactEmail     String?
+  contactUrl       String?
+  /// Dates the user enters, as a day at 00:00 UTC.
+  interviewAt      DateTime?
+  deadlineAt       DateTime?
   generationStatus GenerationStatus @default(QUEUED)
   generationError  String?
   /// Free-text instruction from the last Regenerate.
@@ -229,4 +239,114 @@ model Reminder {
   /// One reminder per rule per application, so syncing is idempotent.
   @@unique([applicationId, rule])
   @@index([userId, dueAt])
+}
+
+// ---------------------------------------------------------------------------
+// Preferences
+// ---------------------------------------------------------------------------
+
+/// What the user is looking for, plus the two facts the setup checklist needs.
+/// The shape of the editable part is PreferencesSchema in @shortlisted/core.
+model Preferences {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  /// ISO 3166-1 alpha-2. Where the user lives and would work remotely from.
+  homeCountry     String    @default("PK")
+  /// ISO 3166-1 alpha-2. The passport that decides who has to sponsor them.
+  citizenship     String    @default("PK")
+  /// Pool ids from POOLS in @shortlisted/core.
+  pools           String[]  @default(["remote", "relocate", "gulf"])
+  /// Career field ids. Empty means every field.
+  fields          String[]  @default([])
+  targetTitles    String[]  @default([])
+  weeklyGoal      Int?
+  /// Where the job feed is downloaded from. Null means the default feed.
+  feedUrl         String?
+  /// Set when the user saves the settings form, so the checklist can tell
+  /// a deliberate choice from the defaults.
+  savedAt         DateTime?
+  /// Last health check from the extension.
+  extensionSeenAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Job listings from the shared feed
+// ---------------------------------------------------------------------------
+
+/// One open role from the shared job feed, plus what this user did with it.
+/// The feed columns mirror FeedListingSchema in @shortlisted/core and are
+/// overwritten by each sync; the columns from `savedAt` down are the user's.
+model Listing {
+  id              String    @id @default(cuid())
+  userId          String
+  /// FeedListing.id: source, board and the source's own job id.
+  feedId          String
+  /// Hash of the feed row, so a sync only rewrites listings that changed.
+  feedHash        String
+  source          String
+  company         String
+  title           String
+  /// The employer's own page for the job.
+  url             String
+  location        String?
+  /// remote | hybrid | onsite | unknown
+  mode            String
+  /// RemoteScope from @shortlisted/core, with the evidence sentence.
+  remote          Json
+  /// Country codes a remote worker may live in, regions expanded and
+  /// exclusions removed. ["*"] is anywhere. Empty on a remote role means the
+  /// posting does not say.
+  admits          String[]
+  /// Countries of the office, for office and hybrid roles.
+  countries       String[]
+  /// Sponsorship from @shortlisted/core, with the evidence sentence.
+  sponsorship     Json
+  licensedSponsor String[]
+  field           String
+  skills          String[]
+  description     String
+  employmentType  String?
+  /// remote | relocate | gulf
+  families        String[]
+  postedAt        DateTime?
+  /// When the feed first carried it.
+  firstSeenAt     DateTime
+  /// Set when a sync no longer finds it in the feed. Cleared if it returns.
+  closedAt        DateTime?
+
+  savedAt         DateTime?
+  hiddenAt        DateTime?
+  /// The application created from this listing by "Tailor my resume".
+  applicationId   String?
+  /// ParsedJob from @shortlisted/core, filled when the user asks for the key
+  /// requirements. Cleared when the feed row changes.
+  parsed          Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([userId, feedId])
+  @@index([userId, closedAt, postedAt])
+  @@index([userId, applicationId])
+}
+
+/// The state of this install's copy of the feed. One row per user.
+model FeedSync {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  /// When the last successful sync finished.
+  syncedAt    DateTime?
+  /// When the feed that was synced was built.
+  builtAt     DateTime?
+  /// Why the last attempt failed, as a sentence. Null after a success.
+  lastError   String?
+  attemptedAt DateTime?
+  /// [{ source, name, url }] from the feed's meta.json, shown on the jobs page.
+  attribution Json      @default("[]")
+  /// The two most recent visits to the jobs page, for the "new" marker.
+  visitAt     DateTime?
+  prevVisitAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }

@@ -1,3 +1,28 @@
+import type { FitResult } from "./fit.js";
+import type { ParsedJob } from "./schemas.js";
+
+/** The per-posting half of the select call. The bank is the other half. */
+export function renderJobBlock(
+  job: ParsedJob,
+  fit: FitResult,
+  note?: string | null,
+): string {
+  return [
+    `Job title: ${job.title}`,
+    `Company: ${job.company}`,
+    `Seniority: ${job.seniority}`,
+    `Must-have skills: ${job.mustHaveSkills.join(", ") || "none listed"}`,
+    `Nice-to-have skills: ${job.niceToHaveSkills.join(", ") || "none listed"}`,
+    `Keywords: ${job.keywords.join(", ") || "none"}`,
+    `Responsibilities:\n${job.responsibilities.map((r) => `- ${r}`).join("\n") || "- none listed"}`,
+    "",
+    `Fit computed by code: ${fit.verdict} (${fit.score}/100). Gaps the bank does not cover: ${fit.gaps.join(", ") || "none"}. Do not paper over the gaps; do not claim them.`,
+    note
+      ? `\nInstruction from the candidate for this regeneration: ${note}`
+      : "",
+  ].join("\n");
+}
+
 export const PARSE_SYSTEM = `You extract structured data from job postings.
 
 You receive the text of a web page. If it is a single job posting, set isJobPosting to true and fill every field from the posting alone. If it is a listing page, a login wall, or anything that is not one job, set isJobPosting to false and leave the arrays empty.

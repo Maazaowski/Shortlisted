@@ -170,6 +170,32 @@ dashboard; Docker Compose deployment.
 Out: accounts, billing, teams and coaches; email integration; multiple templates; auto-detecting
 Applied; analytics beyond the three numbers; running anywhere but the owner's machine.
 
+### Scope change, 11 Nov 2026: finding jobs, and giving the tool away
+
+The tool is now meant to be handed to other job seekers as a GitHub link, free, each running
+their own copy with their own Claude or ChatGPT subscription. Three things move into scope.
+
+- **Models through the user's own subscription.** The `claude-cli` and `codex-cli` providers run
+  the same prompts as manual mode through the official command line tools, signed in once. The
+  validator is unchanged. Paste mode and the API key remain.
+- **An install anyone can follow.** One setup command, a published image, the extension as a
+  download, and a setup checklist that reads real state.
+- **Job discovery.** A shared feed, built once a day by a GitHub Action from the public job boards
+  of a curated list of companies, downloaded by every install. Three pools: Remote (the role
+  admits the user's country), Relocate (the posting states sponsorship or relocation, or the
+  employer is a licensed sponsor), and regional pools, starting with the Gulf. The user still
+  applies by hand on the employer's own page; every listing links there directly.
+
+The promise for discovery is narrower than the promise for documents and has to be said plainly:
+listings are **screened by rules, not by people**. Each answer carries its confidence (stated,
+likely, unclear) and the sentence that produced it, so the user can check. A posting that says
+only "Remote" is unclear, not eligible. Silence about visas is unknown, not a refusal. The same
+rule as the validator applies: never present a guess as a fact.
+
+Still out: accounts, billing, plans and member-only features, marketing and SEO pages, guessed
+contact emails or guessed names of hiring managers, scraping sites that have no public endpoint,
+and job aggregators whose terms require linking to them instead of the employer.
+
 ## Build order
 
 1. Schema, single-user mode. Done.
