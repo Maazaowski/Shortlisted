@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node", "chrome"],
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "allowJs": false
+  },
+  "include": ["*.ts", "tests/**/*.ts", "walkthrough/**/*.ts"]
+}

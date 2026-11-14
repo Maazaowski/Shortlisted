@@ -155,7 +155,7 @@ export type ImportedBank = z.infer<typeof ImportedBankSchema>;
 // ---------------------------------------------------------------------------
 
 export const ValidationFlagSchema = z.object({
-  kind: z.enum(["missing_bullet", "missing_entry", "missing_certification", "added_number", "new_term", "summary_number", "empty"]),
+  kind: z.enum(["missing_bullet", "missing_entry", "missing_certification", "added_number", "new_term", "summary_number", "cover_number", "cover_term", "empty"]),
   bulletId: z.string().nullable(),
   detail: z.string(),
 });

@@ -48,6 +48,55 @@ export function bulletIndex(bank: Bank): Map<string, { bullet: BankBullet; entry
   return idx;
 }
 
+/** Everything the bank says, as one string, for checks that ask "is this anywhere in the bank". */
+function bankCorpus(bank: Bank): string {
+  return [
+    bank.fullName,
+    bank.headline,
+    bank.summary,
+    bank.location ?? "",
+    ...bank.skillGroups.flatMap((g) => [g.name, ...g.skills]),
+    ...bank.education.flatMap((e) => [e.institution, e.degree, e.field ?? "", e.start ?? "", e.end ?? "", e.gpa ?? "", e.honors ?? ""]),
+    ...bank.certifications.flatMap((c) => [c.name, c.issuer ?? "", c.date ?? ""]),
+    ...bank.entries.flatMap((e) => [e.organization, e.title, e.location ?? "", e.startDate ?? "", e.endDate ?? "", ...e.bullets.flatMap((b) => [b.text, b.metric ?? "", ...b.skills])]),
+  ].join("\n");
+}
+
+/** Capitalised words every letter has, which are not claims. */
+const LETTER_WORDS = new Set("dear hiring manager team sincerely regards best kind thank thanks hello hi re january february march april may june july august september october november december".split(" "));
+
+/**
+ * The cover letter gets the same two checks as a rewording, against the whole
+ * bank: a number the bank does not contain, and a capitalised or symbol-bearing
+ * term (where tool and employer names live) the bank does not contain. `allow`
+ * is text the letter may quote freely, such as the job title, the company and
+ * the contact's name. Nothing is changed; the flags are for the user to read.
+ */
+export function validateCoverLetter(bank: Bank, text: string, allow: string[] = []): ValidationFlag[] {
+  const flags: ValidationFlag[] = [];
+  const corpus = bankCorpus(bank);
+  // "2022." at the end of a sentence is the number 2022.
+  const numbers = (s: string) => extractNumbers(s).map((n) => n.replace(/[.,]+$/, ""));
+  const bankNumbers = new Set(numbers(corpus));
+  const seen = new Set<string>();
+  for (const n of numbers(text)) {
+    if (bankNumbers.has(n) || seen.has(n)) continue;
+    seen.add(n);
+    flags.push({ kind: "cover_number", bulletId: null, detail: `The cover letter mentions "${n}", which is not in the bank.` });
+  }
+
+  const known = `${corpus}\n${allow.join("\n")}`.toLowerCase();
+  // A sentence starts with a capital whatever the word is, so the first letter of each is lowered before looking for terms.
+  // Then full stops go, so "reading." is the word and not a term with a dot in it.
+  const body = text.replace(/(^|[.!?:]\s+|\n\s*)([A-Z])(?=[a-z])/g, (_m, lead: string, letter: string) => lead + letter.toLowerCase()).replace(/[.](?=\s|$)/g, " ");
+  for (const t of extractTerms(body)) {
+    const bare = t.replace(/[.']+$/, "").replace(/'s$/, "");
+    if (!bare || LETTER_WORDS.has(bare) || known.includes(bare)) continue;
+    flags.push({ kind: "cover_term", bulletId: null, detail: `The cover letter names "${bare}", which is not in the bank or the posting's title.` });
+  }
+  return flags;
+}
+
 export function validateSelection(bank: Bank, selection: Selection): ValidatedSelection {
   const flags: ValidationFlag[] = [];
   const idx = bulletIndex(bank);

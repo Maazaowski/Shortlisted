@@ -31,11 +31,13 @@ docs/design.md    The product design. Source of truth for scope and intent.
 
 ## Commands
 
-Normal use, everything in containers:
+Normal use, everything in containers. End users run `setup.ps1` or `setup.sh`, which does the
+same thing with the published image (`ghcr.io/maazaowski/shortlisted:latest`, or `SHORTLISTED_IMAGE`)
+and falls back to a local build when the pull fails:
 
 ```bash
-cp .env.example .env            # then set ANTHROPIC_API_KEY
-docker compose up -d --build    # build the image, migrate, start web and worker
+cp .env.example .env            # then pick SHORTLISTED_PROVIDER
+docker compose up -d --build    # build the image from this checkout, migrate, start web and worker
 docker compose logs -f worker   # watch generation
 docker compose down             # stop, keep data.  down -v wipes the database
 ```
@@ -85,7 +87,22 @@ rule down the left.
 
 `.claude/launch.json` defines a `web` preview config for the in-app browser.
 
-**Extension end-to-end test.** `apps/extension/e2e/run.mjs` launches a throwaway Chrome with
+**End-to-end tests.** `pnpm e2e` runs the Playwright suite in `e2e/` (its own workspace,
+`@shortlisted/e2e`). `global-setup.ts` builds web, worker and extension, creates two throwaway
+databases on the Compose Postgres (`shortlisted_e2e_manual`, `shortlisted_e2e_cli`), writes a
+fixture feed through the real classifier (`feed-fixture.ts`), and starts `next start` plus a worker
+for each on ports 3041 and 3042, so the real data is never touched. Three projects run in order on
+one worker: `manual` (paste mode, the whole product from an empty install), `cli`
+(`SHORTLISTED_PROVIDER=claude-cli` with `CLAUDE_BIN` pointing at `e2e/fake-cli`, a stand-in that
+answers the import, parse and select prompts from fixed rules) and `extension` (the unpacked
+extension in Playwright's Chromium). Files in a project run in name order and build on each
+other. `E2E_SKIP_BUILD=1` reuses the last build; logs are in `e2e/.tmp/logs`. The Dockerfile
+copies `e2e/package.json` so the lockfile matches and installs with
+`--filter "!@shortlisted/e2e"`; `.dockerignore` keeps the rest of `e2e/` out of the image.
+`.github/workflows/e2e.yml` runs the suite on pull requests. See `e2e/README.md`, and
+`docs/test-findings.md` for what the first full pass found.
+
+**Extension end-to-end test (older script).** `apps/extension/e2e/run.mjs` launches a throwaway Chrome with
 `apps/extension/dist` loaded, opens a local fixture posting (`e2e/fixtures/ledgerly.html`, with a
 JSON-LD block and an application form), runs the panel page as a background tab in the same
 window, and drives capture, prompt, pasted reply (`e2e/fixtures/reply.json`), generation, Attach
@@ -94,6 +111,86 @@ on `API_BASE` (default `http://localhost:3010`), a worker consuming the queue, a
 pointing at a Chrome for Testing binary (`npx @puppeteer/browsers install chrome@stable`), because
 branded Chrome ignores `--load-extension`. Screenshots land in `apps/extension/e2e/out/`. Pass
 `--headed` to watch it.
+
+**Releases.** Pushing a `v*.*.*` tag runs `.github/workflows/release.yml`: it builds the image
+for amd64 and arm64 with `SHORTLISTED_VERSION` set to the tag, pushes it to GHCR as the tag and
+`latest`, and attaches `shortlisted-extension.zip` to the GitHub Release. `apps/web/lib/version.ts`
+compares `SHORTLISTED_VERSION` with the latest release (cached six hours, off with
+`SHORTLISTED_UPDATE_CHECK=off`, never for a `dev` build) and Settings shows the update commands.
+
+**Setup checklist.** `/setup` reads real state through `setupStatus()` in `apps/web/lib/setup.ts`:
+the provider and, for a CLI provider, `cliStatus()` (an exit code, no model call); whether a
+profile exists; whether the settings form was saved (`Preferences.savedAt`); and whether the
+extension has called `/api/me` from a `chrome-extension://` origin (`Preferences.extensionSeenAt`).
+The board sends a user with no profile there. The Test button calls `pingModel()`.
+
+**Preferences.** One `Preferences` row per user: home country, passport, pools, career fields,
+target titles, weekly goal, feed address. The shape, the country list, the sixteen career fields
+and the pools live in `packages/core/src/preferences.ts`. Read through `getPreferences()` in
+`apps/web/lib/preferences.ts`, which returns the defaults (Pakistan) when nothing is saved.
+
+**Job feed.** Listings come from one shared feed, not from each install. `packages/feed` reads
+`companies.yaml` (one company board per line), fetches each board through an adapter in
+`src/sources/index.ts` (Greenhouse, Lever, Ashby, Workable, Recruitee; public keyless JSON, links
+to the employer's own posting), classifies every job with the pure functions in
+`packages/core/src/listings/` and writes `remote`, `relocate` and `gulf` `.ndjson.gz` files plus
+`meta.json`. `.github/workflows/feed.yml` runs it daily and force-pushes one commit to the `feed`
+branch. `FeedListingSchema` in `listings/feed.ts` is the contract between the builder and the
+installs: add fields as optional, never repurpose one. The classifier stores a remote scope
+(`allowed` country codes and region ids, `excluded`, a confidence of stated, likely or unclear, and
+the sentence that decided it), not a yes or no for one country; `admitsCountry(scope, code)`
+answers for any home country. Sponsorship is read only from explicit sentences; silence is
+`unknown`. `licensedSponsor` comes from the UK Home Office register (OGL v3.0). The UI must call
+this "screened by rules" and show the evidence; nobody checks listings by hand. Job aggregators
+(Himalayas, Remotive, RemoteOK, We Work Remotely, Jobicy) are left out because their terms forbid
+republishing or require linking to them instead of the employer; see `packages/feed/README.md`.
+Local build: `pnpm --filter @shortlisted/feed build-feed --out out --only gitlab,careem`.
+`pnpm format` rewrites the whole repo; do not run it to check formatting.
+
+**Listings in the app.** `Listing` holds this install's copy of the feed plus what the user did
+with each row (`savedAt`, `hiddenAt`, `applicationId`); `FeedSync` holds the sync state. Both carry
+`userId`. `syncFeed()` in `apps/worker/src/feed-sync.ts` downloads the feed (address:
+`SHORTLISTED_FEED_URL`, then `Preferences.feedUrl`, then `DEFAULT_FEED_URL`; a `file://` address
+reads a local build), adds new rows, rewrites changed ones by `feedHash`, marks rows the feed
+dropped as closed and reopens ones that return. It never touches the user's columns and never
+throws: a failure is stored as a sentence in `FeedSync.lastError` and the old listings stay. The
+worker runs it on the `feed-sync` queue: on start, every six hours (`boss.schedule`), and when
+`/jobs` is read with a sync over a day old (`feedStatus()` in `apps/web/lib/listings.ts`, the same
+read-time pattern as reminders). `Listing.admits` is the remote scope flattened to country codes
+(`admitCodes()`, `["*"]` for anywhere), so a pool is a database filter: Remote is `admits` has the
+home country or `*` (plus empty `admits` when "Include unclear" is ticked), Relocate is the
+`relocate` family minus offices in the user's home or passport country, a regional pool is its
+family. `eligibilityTags()` turns a row into the tags the pages show; every tag that makes a claim
+carries the posting's sentence. "Tailor my resume" (`tailorListingAction`) calls
+`createApplicationFromCapture` with a JobPosting block built from the listing, so the pipeline is
+the same as an extension capture, and links `Listing.applicationId`.
+
+**Matching and the CV check.** Both are code, no model call. `matchListing()` in
+`packages/core/src/listings/match.ts` compares a listing's skill tags and title with the bank's
+skills and the target titles (the profile headline when none are set); `/jobs` shows "n of m skills
+in your bank" on each row and "Best match first" scores every listing the filters leave
+(`matchPage()` in `apps/web/lib/listings.ts`), because the database cannot sort by the bank. The
+tags come from a fixed word list, so the UI calls it a rough guide. "Read the key requirements"
+(`keyRequirementsAction`) runs `parseJob` once and stores `Listing.parsed`; Tailor passes it to
+`createApplicationFromCapture` so the worker skips its parse, and a feed sync clears it when the
+posting changes. It is not offered in manual mode. The worker stores the whole `FitResult`
+(`gaps`, `covered`, `niceToHaveCovered`) on the application. `checkCv()` in
+`packages/core/src/cv-check.ts` is a list of rules over the bank, each with a pass sentence and a
+finding that costs points; `/bank/check` renders it and never edits the bank.
+
+**Tracker additions.** `followupTemplates()` in `packages/core/src/followups.ts` fills five plain
+message templates from the application (no model call); the file has no Node imports and is also
+exported as `@shortlisted/core/followups` for the client component. `Application` carries
+`contactName`, `contactEmail`, `contactUrl`, `interviewAt` and `deadlineAt`, all typed by the user
+(`POST /api/applications/:id/details`, `updateDetails()`); a contact is never guessed, the page only
+offers search links. `validateCoverLetter()` in `validate.ts` flags numbers and capitalised terms
+the bank does not contain; the worker stores the flags on the COVER_LETTER document, and
+`saveCoverLetter()` (`POST /api/applications/:id/cover-letter`) saves an edit in place, re-checks
+it and renders the PDF again in the web process, which is the one place the web app runs Typst.
+`ApplicationView` gained `covered`, `niceToHaveCovered`, `contact`, `interviewAt`, `deadlineAt` and
+`coverLetter.flags` / `.edited`; the extension mirror has them. The dashboard shows this week
+against `Preferences.weeklyGoal`. `GET /api/export` (`apps/web/lib/export.ts`) downloads everything
+as JSON, or one row per application with `?format=csv`; Settings links both.
 
 ## Environment and config
 
@@ -179,8 +276,24 @@ them when entering APPLIED so the clock restarts. There is no cron: nothing woul
 ## Providers
 
 `provider()` in `packages/core/src/provider.ts` decides who runs the three model calls (parse,
-select, import). `SHORTLISTED_PROVIDER=anthropic|manual`; unset, it is `anthropic` when
-`ANTHROPIC_API_KEY` is set and `manual` otherwise.
+select, import). `SHORTLISTED_PROVIDER=anthropic|claude-cli|codex-cli|manual`; unset, it is
+`anthropic` when `ANTHROPIC_API_KEY` is set and `manual` otherwise. The CLI providers are never
+guessed.
+
+**claude-cli and codex-cli** run the same text prompts as manual mode through Claude Code or
+Codex, signed in with the user's own subscription. `parseJob`, `selectForJob` and
+`importBankFromResume` in `claude.ts` dispatch to `askCli()` in `packages/core/src/cli.ts`, which
+pipes the prompt on stdin, reads the reply with the manual-mode parsers (`parseParseReply`,
+`parseSelectReply`, `parseImportReply`), and retries once with the reason when the reply does not
+parse. Parse and select stay two calls, so a POOR fit still stops before select. Every difference
+between the two tools is in `invocation()`: Claude Code runs with one turn, no tools, `--safe-mode`
+and no session file, and its child environment has `ANTHROPIC_API_KEY` removed because print mode
+would otherwise bill the key instead of the subscription. Codex runs `exec` in the read-only
+sandbox. Both run in the temp directory. The image installs both tools; logins live in the
+`cli_auth` volume at `/cli` (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`), set up once with
+`docker compose exec worker claude auth login` or `codex login --device-auth`. On the host,
+`CLAUDE_BIN` and `CODEX_BIN` override the commands. The pipeline and the `=== "manual"` branches
+are unchanged: a CLI provider takes the automatic path.
 
 **Manual** costs nothing and needs no key. Capture creates the application in
 `generationStatus: WAITING` and does not enqueue. `GET /api/applications/:id/prompt` returns
@@ -214,8 +327,9 @@ Check `stop_reason === "refusal"` before reading output (`ModelRefusedError`).
   are set. Add new API routes the same way.
 - Dates in the bank are `YYYY-MM` strings. Skill tags are lowercase and pass through
   `normalizeSkills()` on write.
-- Tests are Vitest next to the source (`*.test.ts`). Pure functions in `packages/core` get tests;
-  UI does not yet.
+- Unit tests are Vitest next to the source (`*.test.ts`), for pure functions in `packages/core`.
+  Pages, API routes, the worker and the extension are covered by the Playwright suite in `e2e/`.
+  A change to visible text or a label usually needs the matching locator in `e2e/tests` updated.
 - `noUncheckedIndexedAccess` is on everywhere; index results are `T | undefined`.
 - Line endings are LF (`.gitattributes`). No shell scripts in the Docker path; Compose uses
   `command:` arrays.
@@ -233,6 +347,14 @@ Check `stop_reason === "refusal"` before reading output (`ModelRefusedError`).
   `apps/extension/sidepanel.css` and follows the system scheme.
 
 ## Status
+
+Verified on 13 Nov 2026 by `pnpm e2e` (108 tests) and `pnpm test` (213): paste mode end to end
+from an empty install, the automatic path against the stand-in tool, the extension (capture,
+reply, Attach, stage change), jobs pools and filters against a fixture feed, the tracker
+additions, export, and the Docker image build. Still not verified: a real signed-in Claude Code
+or Codex, the anthropic provider, the setup scripts on a clean machine, the release and feed
+workflows, and the extension on live job sites. `docs/test-findings.md` lists the open caveats
+and missing features (no delete for an application, no restore from the export, among others).
 
 Verified on 11 Sep 2026: the single-user conversion, the init migration, the seed, the board,
 bank, generate, dashboard and detail pages, `/api/me`, capture and URL lookup without auth, the

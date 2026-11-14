@@ -12,9 +12,10 @@ export async function resolveUserId(_req: Request): Promise<string> {
 /** Origins the extension may call from. Chrome extension pages have a chrome-extension:// origin. */
 export function corsHeaders(req: Request): HeadersInit {
   const origin = req.headers.get("origin") ?? "";
-  const allow = origin.startsWith("chrome-extension://") ? origin : "";
+  // Any other origin gets no CORS headers at all, so a web page cannot read the answer.
+  if (!origin.startsWith("chrome-extension://")) return { Vary: "Origin" };
   return {
-    "Access-Control-Allow-Origin": allow,
+    "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Headers": "content-type",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     Vary: "Origin",

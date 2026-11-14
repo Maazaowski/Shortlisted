@@ -123,20 +123,85 @@ function describeIssue(err: z.ZodError): string {
   return `The reply does not match the expected shape at ${first.path.join(".") || "the top level"}: ${first.message}`;
 }
 
+function unalias(selection: Selection, bank: Bank): Selection {
+  const { entries, bullets, certifications } = bankAliases(bank);
+  return {
+    ...selection,
+    entries: selection.entries.map((e) => ({
+      entryId: entries.get(e.entryId) ?? e.entryId,
+      bullets: e.bullets.map((b) => ({ id: bullets.get(b.id) ?? b.id, rewording: b.rewording })),
+    })),
+    certifications: selection.certifications.map((c) => certifications.get(c) ?? c),
+  };
+}
+
 /** Validates a pasted selection reply and maps aliases back to bank ids. */
 export function parseSelectionReply(text: string, bank: Bank): { parsed: ParsedJob; selection: Selection } {
   const result = SelectionReplySchema.safeParse(extractJson(text));
   if (!result.success) throw new ManualReplyError(describeIssue(result.error));
-  const { entries, bullets, certifications } = bankAliases(bank);
-  const selection: Selection = {
-    ...result.data.selection,
-    entries: result.data.selection.entries.map((e) => ({
-      entryId: entries.get(e.entryId) ?? e.entryId,
-      bullets: e.bullets.map((b) => ({ id: bullets.get(b.id) ?? b.id, rewording: b.rewording })),
-    })),
-    certifications: result.data.selection.certifications.map((c) => certifications.get(c) ?? c),
-  };
-  return { parsed: result.data.parsed, selection };
+  return { parsed: result.data.parsed, selection: unalias(result.data.selection, bank) };
+}
+
+/*
+ * The CLI providers send the same text prompts through a signed-in command
+ * line tool instead of the user's clipboard. They keep parse and select as two
+ * calls, so a POOR fit still stops before the select call is spent.
+ */
+
+const REPLY_LINE = "Reply with one JSON object and nothing else, in this exact shape:";
+
+const PARSE_REPLY_SHAPE = `{
+  "isJobPosting": true,
+  "title": "", "company": "", "location": null,
+  "seniority": "intern|junior|mid|senior|staff|lead|manager|unknown",
+  "mustHaveSkills": [], "niceToHaveSkills": [], "keywords": [], "responsibilities": [],
+  "yearsExperience": null
+}`;
+
+const SELECT_REPLY_SHAPE = `{
+  "headline": "",
+  "summary": "",
+  "skillGroups": [{ "name": "", "skills": [] }],
+  "entries": [{ "entryId": "e1", "bullets": [{ "id": "b1", "rewording": null }] }],
+  "certifications": ["c1"],
+  "coverLetter": ""
+}`;
+
+export function buildParsePrompt(postingText: string): string {
+  return [PARSE_SYSTEM, "", "## Page text", postingText.trim(), "", "## Reply", REPLY_LINE, "```json", PARSE_REPLY_SHAPE, "```"].join("\n");
+}
+
+export function parseParseReply(text: string): ParsedJob {
+  const result = ParsedJobSchema.safeParse(extractJson(text));
+  if (!result.success) throw new ManualReplyError(describeIssue(result.error));
+  return result.data;
+}
+
+/** Select only, for a posting that is already parsed. `jobBlock` comes from renderJobBlock(). */
+export function buildSelectPrompt(bank: Bank, jobBlock: string): string {
+  return [
+    SELECT_SYSTEM.replace("Return exactly the schema requested.", "").trim(),
+    "",
+    "The bank below is text, not JSON. Cite entries as e1, e2, bullets as b1, b2 and certifications as c1, c2 exactly as labelled. Never invent a label.",
+    "",
+    "## Experience bank",
+    renderBank(bank),
+    "",
+    "## Job",
+    jobBlock.trim(),
+    "",
+    "## Reply",
+    REPLY_LINE,
+    "```json",
+    SELECT_REPLY_SHAPE,
+    "```",
+  ].join("\n");
+}
+
+export function parseSelectReply(text: string, bank: Bank): Selection {
+  const result = SelectionReplySchema.shape.selection.safeParse(extractJson(text));
+  if (!result.success) throw new ManualReplyError(describeIssue(result.error));
+  return unalias(result.data, bank);
 }
 
 const IMPORT_REPLY_SHAPE = `{

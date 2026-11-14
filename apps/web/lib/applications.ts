@@ -2,16 +2,23 @@ import "server-only";
 import { Prisma, withUser, type Stage, type Tx } from "@shortlisted/db";
 import {
   BankSchema,
+  buildCoverLetterTypst,
   buildSelectionPrompt,
+  compileTypst,
+  documentKey,
+  ParsedJobSchema,
+  validateCoverLetter,
   normalizeCapture,
   parseSelectionReply,
   provider,
   type Bank,
   type Capture,
+  type ParsedJob,
   type ResumeDiff,
   type ValidationFlag,
 } from "@shortlisted/core";
 import { enqueueGeneration } from "./queue";
+import { storage } from "./storage";
 
 /** The single application shape the panel, the board and the detail page read. */
 export type ApplicationView = {
@@ -24,10 +31,17 @@ export type ApplicationView = {
   fitVerdict: "STRONG" | "GOOD" | "POSSIBLE" | "POOR" | null;
   fitScore: number | null;
   gaps: string[];
+  /** Must-have skills the bank covers, and nice-to-haves it covers. */
+  covered: string[];
+  niceToHaveCovered: string[];
   rejectionReason: string | null;
+  /** Typed by the user. Dates are ISO strings for a day at 00:00 UTC. */
+  contact: { name: string | null; email: string | null; url: string | null };
+  interviewAt: string | null;
+  deadlineAt: string | null;
   job: { id: string; url: string | null; title: string | null; company: string | null; sourceHost: string | null };
   resume: { id: string; version: number; fileName: string; hasFile: boolean; flags: ValidationFlag[]; diff: ResumeDiff | null } | null;
-  coverLetter: { id: string; version: number; fileName: string; hasFile: boolean; text: string } | null;
+  coverLetter: { id: string; version: number; fileName: string; hasFile: boolean; text: string; flags: ValidationFlag[]; edited: boolean } | null;
   events: { id: string; fromStage: Stage | null; toStage: Stage; note: string | null; createdAt: string }[];
   notes: { id: string; body: string; createdAt: string }[];
   reminders: { id: string; rule: string; dueAt: string; doneAt: string | null }[];
@@ -35,12 +49,18 @@ export type ApplicationView = {
   updatedAt: string;
 };
 
-export async function createApplicationFromCapture(userId: string, capture: Capture): Promise<{ id: string; existing: boolean }> {
+/**
+ * `parsed` is a posting that was already read (a listing whose key requirements
+ * the user asked for), so the worker skips its parse call.
+ */
+export async function createApplicationFromCapture(userId: string, capture: Capture, opts: { parsed?: ParsedJob } = {}): Promise<{ id: string; existing: boolean }> {
   const n = normalizeCapture(capture);
   if (n.rawText.trim().length < 80) throw new Error("Not enough text on this page to read a job posting.");
   const manual = provider() === "manual";
 
   const result = await withUser(userId, async (tx) => {
+    // Without a bank there is nothing to select from, and the application would sit unfinished forever.
+    if ((await tx.bankBullet.count({ where: { userId } })) === 0) throw new Error("Your experience bank is empty. Import your resume first, then tailor.");
     let job = await tx.job.findFirst({ where: { userId, contentHash: n.contentHash } });
     if (!job && capture.url) job = await tx.job.findFirst({ where: { userId, url: capture.url } });
     if (job) {
@@ -56,6 +76,7 @@ export async function createApplicationFromCapture(userId: string, capture: Capt
           company: n.company,
           rawText: n.rawText,
           contentHash: n.contentHash,
+          ...(opts.parsed ? { parsed: opts.parsed as unknown as Prisma.InputJsonValue } : {}),
         },
       });
     }
@@ -92,7 +113,12 @@ export async function getApplicationView(userId: string, id: string): Promise<Ap
       fitVerdict: app.fitVerdict,
       fitScore: app.fitScore,
       gaps: app.gaps,
+      covered: app.covered,
+      niceToHaveCovered: app.niceToHaveCovered,
       rejectionReason: app.rejectionReason,
+      contact: { name: app.contactName, email: app.contactEmail, url: app.contactUrl },
+      interviewAt: app.interviewAt?.toISOString() ?? null,
+      deadlineAt: app.deadlineAt?.toISOString() ?? null,
       job: { id: app.job.id, url: app.job.url, title: app.job.title, company: app.job.company, sourceHost: app.job.sourceHost },
       resume: resume
         ? {
@@ -111,6 +137,8 @@ export async function getApplicationView(userId: string, id: string): Promise<Ap
             fileName: cover.fileName,
             hasFile: Boolean(cover.fileKey),
             text: (cover.selection as { text?: string }).text ?? "",
+            flags: (cover.flags as ValidationFlag[] | null) ?? [],
+            edited: (cover.selection as { edited?: boolean }).edited === true,
           }
         : null,
       events: app.stageEvents.map((e) => ({ id: e.id, fromStage: e.fromStage, toStage: e.toStage, note: e.note, createdAt: e.createdAt.toISOString() })),
@@ -163,6 +191,49 @@ export async function addNote(userId: string, id: string, body: string): Promise
   await withUser(userId, (tx) => tx.note.create({ data: { userId, applicationId: id, body } }));
 }
 
+export type ApplicationDetails = { contactName: string | null; contactEmail: string | null; contactUrl: string | null; interviewAt: Date | null; deadlineAt: Date | null };
+
+/** The fields the user fills in about an application. Not a stage change, so no event. */
+export async function updateDetails(userId: string, id: string, details: ApplicationDetails): Promise<void> {
+  await withUser(userId, (tx) => tx.application.updateMany({ where: { id, userId }, data: details }));
+}
+
+/**
+ * Saves the user's edit of the latest cover letter, in place: the text, the
+ * flags from the same number and term checks a generated letter gets, and a
+ * fresh PDF. When the PDF cannot be rendered the old one is dropped rather
+ * than left saying something the text no longer says.
+ */
+export async function saveCoverLetter(userId: string, id: string, text: string): Promise<void> {
+  const loaded = await withUser(userId, async (tx) => {
+    const app = await tx.application.findFirst({ where: { id, userId }, include: { job: true } });
+    if (!app) throw new Error("Not found");
+    const doc = await tx.document.findFirst({ where: { applicationId: id, type: "COVER_LETTER" }, orderBy: { version: "desc" } });
+    if (!doc) throw new Error("There is no cover letter to edit yet.");
+    const bank = await loadBankFor(tx, userId);
+    if (!bank) throw new Error("Import your resume first.");
+    return { app, doc, bank };
+  });
+  const { app, doc, bank } = loaded;
+  const read = app.job.parsed ? ParsedJobSchema.safeParse(app.job.parsed) : null;
+  const title = (read?.success ? read.data.title : "") || app.job.title || "the role";
+  const company = (read?.success ? read.data.company : "") || app.job.company || "your company";
+  const flags = validateCoverLetter(bank, text, [title, company, read?.success ? (read.data.location ?? "") : "", app.contactName ?? ""]);
+
+  let fileKey: string | null = null;
+  try {
+    const pdf = await compileTypst(buildCoverLetterTypst(bank, text, { title, company }));
+    fileKey = doc.fileKey ?? documentKey(userId, id, "COVER_LETTER", doc.version, "pdf");
+    await storage.put(fileKey, pdf, "application/pdf");
+  } catch (err) {
+    console.error("[cover-letter] render failed:", (err as Error).message);
+    fileKey = null;
+  }
+  await withUser(userId, (tx) =>
+    tx.document.update({ where: { id: doc.id }, data: { selection: { text, edited: true } as Prisma.InputJsonValue, flags: flags as unknown as Prisma.InputJsonValue, fileKey } }),
+  );
+}
+
 export async function regenerate(userId: string, id: string, note?: string | null): Promise<void> {
   const manual = provider() === "manual";
   await withUser(userId, (tx) =>
@@ -178,7 +249,7 @@ export async function regenerate(userId: string, id: string, note?: string | nul
 // Manual provider: the user carries the prompt to the model and the reply back.
 // ---------------------------------------------------------------------------
 
-async function loadBankFor(tx: Tx, userId: string): Promise<Bank | null> {
+export async function loadBankFor(tx: Tx, userId: string): Promise<Bank | null> {
   const profile = await tx.profile.findFirst({ where: { userId } });
   if (!profile) return null;
   const entries = await tx.bankEntry.findMany({ where: { userId }, orderBy: { sortOrder: "asc" }, include: { bullets: { orderBy: { sortOrder: "asc" } } } });
@@ -253,6 +324,8 @@ export type BoardCard = {
   daysInStage: number;
   /** An open follow-up reminder exists. */
   followUp: boolean;
+  interviewAt: string | null;
+  deadlineAt: string | null;
 };
 
 export async function listBoard(userId: string): Promise<BoardCard[]> {
@@ -272,6 +345,8 @@ export async function listBoard(userId: string): Promise<BoardCard[]> {
       generationStatus: a.generationStatus,
       daysInStage: Math.floor((now - (a.stageEvents[0]?.createdAt.getTime() ?? a.createdAt.getTime())) / 86_400_000),
       followUp: a.reminders.length > 0,
+      interviewAt: a.interviewAt?.toISOString() ?? null,
+      deadlineAt: a.deadlineAt?.toISOString() ?? null,
     }));
   });
 }

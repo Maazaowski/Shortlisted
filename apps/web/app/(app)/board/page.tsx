@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 export default async function BoardPage() {
   const user = await requireUser();
   const profile = await withUser(user.id, (tx) => tx.profile.findFirst({ where: { userId: user.id } }));
-  if (!profile) redirect("/onboarding");
+  if (!profile) redirect("/setup");
   await syncReminders(user.id);
   const [cards, reminders] = await Promise.all([listBoard(user.id), listOpenReminders(user.id)]);
 
@@ -100,6 +100,11 @@ function Stat({ label, value, accent }: { label: string; value: number; accent?:
   );
 }
 
+/** A stored day (00:00 UTC) as "14 Nov". */
+function shortDay(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+}
+
 function Card({ card: c }: { card: BoardCard }) {
   const generating = c.generationStatus === "QUEUED" || c.generationStatus === "RUNNING";
   return (
@@ -111,7 +116,7 @@ function Card({ card: c }: { card: BoardCard }) {
         </div>
       ) : (
         <>
-          <div className="truncate text-[13px] font-medium leading-snug">{c.title ?? "Reading posting"}</div>
+          <div className="truncate text-[13px] font-medium leading-snug">{c.title ?? (c.generationStatus === "FAILED" ? "Untitled posting" : "Reading posting")}</div>
           <div className="truncate text-xs text-ink-2">{c.company ?? "\u00a0"}</div>
         </>
       )}
@@ -120,6 +125,8 @@ function Card({ card: c }: { card: BoardCard }) {
         <span className="num text-[11px] text-ink-3">{c.daysInStage}d</span>
       </div>
       {c.followUp && <div className="mt-1.5 text-[11px] font-medium text-warn">Follow up</div>}
+      {c.interviewAt && <div className="num mt-1.5 text-[11px] text-ink">Interview {shortDay(c.interviewAt)}</div>}
+      {c.deadlineAt && <div className="num mt-1.5 text-[11px] text-ink-2">Apply by {shortDay(c.deadlineAt)}</div>}
       {c.generationStatus === "WAITING" && <div className="mt-1.5 text-[11px] font-medium text-accent">Needs your reply</div>}
       {c.generationStatus === "FAILED" && <div className="mt-1.5 text-[11px] font-medium text-bad">Generation failed</div>}
       {generating && (

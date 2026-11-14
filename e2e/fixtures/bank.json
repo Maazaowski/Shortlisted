@@ -1,0 +1,60 @@
+{
+  "fullName": "Sample Person",
+  "email": "sample@example.com",
+  "phone": "+1 555 0100",
+  "location": "Remote",
+  "links": [{ "label": "github.com", "url": "https://github.com/example" }],
+  "headline": "Senior Software Engineer",
+  "summary": "Backend engineer who ships multi-tenant SaaS on Node, Postgres and TypeScript, with a habit of measuring what changed.",
+  "skillGroups": [
+    { "name": "Backend", "skills": ["node", "typescript", "postgres", "prisma", "nestjs"] },
+    { "name": "Frontend", "skills": ["react", "next", "tailwind"] },
+    { "name": "Infra", "skills": ["docker", "ci cd", "aws"] }
+  ],
+  "education": [
+    { "institution": "State University", "degree": "BSc", "field": "Computer Science", "start": "2014-09", "end": "2018-06", "gpa": "3.7/4.0", "honors": "Dean's List 2017" }
+  ],
+  "certifications": [{ "name": "AWS Certified Developer, Associate", "issuer": "Amazon Web Services", "date": "2023-04", "url": null }],
+  "entries": [
+    {
+      "kind": "ROLE",
+      "organization": "Acme Payments",
+      "title": "Senior Software Engineer",
+      "location": "Remote",
+      "startDate": "2022-03",
+      "endDate": null,
+      "url": null,
+      "bullets": [
+        { "text": "Built a double-entry ledger with multi-currency FX on Postgres, used by 40 businesses", "skills": ["postgres", "typescript", "nestjs"], "metric": "40 businesses" },
+        { "text": "Cut invoice extraction time by 40% with PDF fingerprinting and per-customer models", "skills": ["python", "fastapi", "mysql"], "metric": "40%" },
+        { "text": "Introduced Postgres row-level security across every tenant table, replacing app-only checks", "skills": ["postgres", "rls", "prisma"], "metric": null },
+        { "text": "Set up Playwright end-to-end suites that run on every pull request in under 6 minutes", "skills": ["playwright", "ci cd", "testing"], "metric": "6 minutes" }
+      ]
+    },
+    {
+      "kind": "ROLE",
+      "organization": "Widget Co",
+      "title": "Software Engineer",
+      "location": null,
+      "startDate": "2018-07",
+      "endDate": "2022-02",
+      "url": null,
+      "bullets": [
+        { "text": "Migrated a monolith's reporting module to a Next.js app with React Query, halving page load time", "skills": ["next", "react", "react query"], "metric": "halved" },
+        { "text": "Containerised 12 services with Docker and moved deploys to a GitHub Actions pipeline", "skills": ["docker", "ci cd", "github actions"], "metric": "12 services" }
+      ]
+    },
+    {
+      "kind": "PROJECT",
+      "organization": "Velaro",
+      "title": "Desktop app to train and serve local LLMs",
+      "location": null,
+      "startDate": "2025-01",
+      "endDate": null,
+      "url": "https://github.com/example/velaro",
+      "bullets": [
+        { "text": "Shipped a Tauri v2 and React 19 desktop app exposing an OpenAI-compatible API for local models", "skills": ["tauri", "rust", "react", "llm"], "metric": null }
+      ]
+    }
+  ]
+}

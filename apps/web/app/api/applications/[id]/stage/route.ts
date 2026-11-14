@@ -14,6 +14,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   const { id } = await ctx.params;
   const body = Body.safeParse(await req.json().catch(() => null));
   if (!body.success) return json(req, { error: "Invalid stage." }, { status: 400 });
+  if (!(await getApplicationView(userId, id))) return json(req, { error: "Not found" }, { status: 404 });
   await changeStage(userId, id, body.data.stage, body.data.note ?? null);
   return json(req, await getApplicationView(userId, id));
 }

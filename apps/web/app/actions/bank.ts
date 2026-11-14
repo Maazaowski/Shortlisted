@@ -13,6 +13,13 @@ function opt(form: FormData, key: string): string | null {
   return v === "" ? null : v;
 }
 
+/** Bank dates are YYYY-MM. Anything else the form let through is dropped rather than printed on a resume as typed. */
+function month(form: FormData, key: string): string | null {
+  const m = str(form, key).match(/^(\d{4})-(\d{1,2})$/);
+  if (!m || Number(m[2]) < 1 || Number(m[2]) > 12) return null;
+  return `${m[1]}-${m[2]!.padStart(2, "0")}`;
+}
+
 export async function updateProfileAction(form: FormData) {
   const user = await requireUser();
   await withUser(user.id, async (tx) => {
@@ -60,13 +67,36 @@ export async function addEntryAction(form: FormData) {
         organization: str(form, "organization"),
         title: str(form, "title"),
         location: opt(form, "location"),
-        startDate: opt(form, "startDate"),
-        endDate: opt(form, "endDate"),
+        startDate: month(form, "startDate"),
+        endDate: month(form, "endDate"),
         url: opt(form, "url"),
         sortOrder: count,
       },
     });
   });
+  revalidatePath("/bank");
+}
+
+/** Edits the role or project itself. Its bullets are untouched. */
+export async function updateEntryAction(form: FormData) {
+  const user = await requireUser();
+  const organization = str(form, "organization");
+  const title = str(form, "title");
+  if (!organization || !title) return;
+  await withUser(user.id, (tx) =>
+    tx.bankEntry.updateMany({
+      where: { id: str(form, "id"), userId: user.id },
+      data: {
+        kind: str(form, "kind") === "PROJECT" ? "PROJECT" : "ROLE",
+        organization,
+        title,
+        location: opt(form, "location"),
+        startDate: month(form, "startDate"),
+        endDate: month(form, "endDate"),
+        url: opt(form, "url"),
+      },
+    }),
+  );
   revalidatePath("/bank");
 }
 

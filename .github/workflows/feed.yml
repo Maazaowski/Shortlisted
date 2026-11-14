@@ -1,0 +1,63 @@
+# Builds the shared job feed once a day and publishes it on the `feed` branch.
+#
+# Every install downloads the feed from that branch, so this workflow is the
+# only place the job boards are fetched. The branch always holds exactly one
+# commit, force-pushed, so the repository does not grow by a feed a day.
+#
+# Run it by hand from the Actions tab (Run workflow) to publish the first feed
+# or to refresh it after editing packages/feed/companies.yaml.
+name: Job feed
+
+on:
+  schedule:
+    - cron: "17 3 * * *" # 03:17 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: feed
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      # Yesterday's feed, so each listing keeps the date it was first seen.
+      # Absent on the very first run, which is fine.
+      - name: Fetch the previous feed
+        run: |
+          mkdir -p prev
+          if git ls-remote --exit-code --heads origin feed >/dev/null 2>&1; then
+            git fetch --depth 1 origin feed
+            git archive FETCH_HEAD | tar -x -C prev
+          fi
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @shortlisted/core build
+      - run: pnpm --filter @shortlisted/core test
+
+      - name: Build the feed
+        run: pnpm --filter @shortlisted/feed build-feed --out "$GITHUB_WORKSPACE/out" --prev "$GITHUB_WORKSPACE/prev"
+
+      - name: Publish to the feed branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp packages/feed/FEED_README.md out/README.md
+          cd out
+          git init --quiet --initial-branch=feed
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit --quiet -m "Job feed $(date -u +%Y-%m-%d)"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" feed

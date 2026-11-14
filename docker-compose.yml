@@ -1,11 +1,16 @@
 # The whole product on one machine.
 #
-#   docker compose up -d --build   build and start everything
+#   docker compose up -d           download the published image and start everything
+#   docker compose up -d --build   build the image from this checkout instead
+#   docker compose pull            fetch a newer published image, then `up -d` again
 #   docker compose logs -f worker  watch generation
 #   docker compose down            stop (data is kept)
 #   docker compose down -v         stop and wipe the database
 #
-# ANTHROPIC_API_KEY, SHORTLISTED_PROVIDER, SHORTLISTED_MODEL and WEB_PORT are read from the root .env
+#   docker compose exec worker claude auth login          sign in to Claude Code (claude-cli)
+#   docker compose exec worker codex login --device-auth  sign in to Codex (codex-cli)
+#
+# ANTHROPIC_API_KEY, SHORTLISTED_PROVIDER, SHORTLISTED_MODEL, SHORTLISTED_CLI_MODEL, SHORTLISTED_IMAGE and WEB_PORT are read from the root .env
 # by Compose's own interpolation. env_file is deliberately not used: the .env
 # also holds the host-side DATABASE_URL, which must not leak into the containers.
 #
@@ -16,12 +21,17 @@
 # `pnpm worker`, with .env pointing DATABASE_URL at localhost:5434.
 name: shortlisted
 
+# The published image, built for Intel/AMD and Apple Silicon by .github/workflows/release.yml.
+# SHORTLISTED_IMAGE in .env points somewhere else, for example at a fork's image.
+x-image: &image ${SHORTLISTED_IMAGE:-ghcr.io/maazaowski/shortlisted:latest}
+
 x-app-env: &app-env
   DATABASE_URL: postgresql://postgres:postgres@db:5432/shortlisted
   STORAGE_DIR: /data/files
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
   SHORTLISTED_PROVIDER: ${SHORTLISTED_PROVIDER:-}
   SHORTLISTED_MODEL: ${SHORTLISTED_MODEL:-}
+  SHORTLISTED_CLI_MODEL: ${SHORTLISTED_CLI_MODEL:-}
 
 services:
   db:
@@ -43,7 +53,7 @@ services:
 
   migrate:
     build: .
-    image: shortlisted:local
+    image: *image
     command: ["pnpm", "--filter", "@shortlisted/db", "migrate:deploy"]
     environment: *app-env
     depends_on:
@@ -52,24 +62,26 @@ services:
     restart: "no"
 
   web:
-    image: shortlisted:local
+    image: *image
     command: ["pnpm", "--filter", "@shortlisted/web", "start"]
     environment: *app-env
     ports:
       - "127.0.0.1:${WEB_PORT:-3000}:3000"
     volumes:
       - ./data/files:/data/files
+      - cli_auth:/cli
     depends_on:
       migrate:
         condition: service_completed_successfully
     restart: unless-stopped
 
   worker:
-    image: shortlisted:local
+    image: *image
     command: ["node", "apps/worker/dist/index.js"]
     environment: *app-env
     volumes:
       - ./data/files:/data/files
+      - cli_auth:/cli
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -77,3 +89,5 @@ services:
 
 volumes:
   db_data:
+  # Sign-ins for the claude-cli and codex-cli providers. Treat it like a password.
+  cli_auth:

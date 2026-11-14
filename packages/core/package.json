@@ -13,6 +13,10 @@
     "./stages": {
       "types": "./dist/stages.d.ts",
       "default": "./dist/stages.js"
+    },
+    "./followups": {
+      "types": "./dist/followups.d.ts",
+      "default": "./dist/followups.js"
     }
   },
   "scripts": {

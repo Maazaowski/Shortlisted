@@ -218,6 +218,7 @@ function render() {
     <div class="row">${verdictPill(a)} <span class="pill accent">${STAGE_LABEL[a.stage]}</span>${a.reminders.some((r) => !r.doneAt) ? ` <span class="pill warn">Follow up</span>` : ""}</div>
     <h3>${esc(a.job.title ?? "Reading posting")}</h3>
     <div class="muted small">${esc(a.job.company ?? "")}</div>
+    ${a.covered?.length ? `<h2>In your bank</h2><div class="small">${esc(a.covered.join(", "))}</div>` : ""}
     ${a.gaps.length ? `<h2>Gaps</h2><div class="small">${esc(a.gaps.join(", "))}</div>` : ""}
   </div>`);
 

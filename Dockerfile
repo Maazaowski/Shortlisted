@@ -11,13 +11,28 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 # Typst for PDF rendering. The musl build is static and runs on Debian as is.
-RUN curl -fsSL "https://github.com/typst/typst/releases/download/${TYPST_VERSION}/typst-x86_64-unknown-linux-musl.tar.xz" \
+# TARGETARCH is set by BuildKit: amd64 on Intel and AMD, arm64 on Apple Silicon.
+ARG TARGETARCH
+RUN case "${TARGETARCH}" in arm64) TYPST_ARCH=aarch64 ;; *) TYPST_ARCH=x86_64 ;; esac \
+  && curl -fsSL "https://github.com/typst/typst/releases/download/${TYPST_VERSION}/typst-${TYPST_ARCH}-unknown-linux-musl.tar.xz" \
   | tar -xJ -C /tmp \
-  && mv /tmp/typst-x86_64-unknown-linux-musl/typst /usr/local/bin/typst \
-  && rm -rf /tmp/typst-x86_64-unknown-linux-musl \
+  && mv "/tmp/typst-${TYPST_ARCH}-unknown-linux-musl/typst" /usr/local/bin/typst \
+  && rm -rf "/tmp/typst-${TYPST_ARCH}-unknown-linux-musl" \
   && typst --version
 
 RUN npm install -g pnpm@11.7.0
+
+# The two command line tools behind the claude-cli and codex-cli providers.
+# Each person signs in once with their own subscription; the login lives in the
+# cli_auth volume mounted at /cli, never in the image.
+ARG CLAUDE_CODE_VERSION=2.1.317
+ARG CODEX_VERSION=0.167.1
+RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} @openai/codex@${CODEX_VERSION} \
+  && mkdir -p /cli/claude /cli/codex \
+  && claude --version && codex --version
+ENV CLAUDE_CONFIG_DIR=/cli/claude
+ENV CODEX_HOME=/cli/codex
+ENV DISABLE_UPDATES=1
 
 WORKDIR /app
 
@@ -28,7 +43,10 @@ COPY apps/worker/package.json apps/worker/
 COPY apps/extension/package.json apps/extension/
 COPY packages/db/package.json packages/db/
 COPY packages/core/package.json packages/core/
-RUN pnpm install --frozen-lockfile
+COPY packages/feed/package.json packages/feed/
+COPY e2e/package.json e2e/
+# The end-to-end tests are a workspace so the lockfile matches, but nothing of theirs is installed here.
+RUN pnpm install --frozen-lockfile --filter "!@shortlisted/e2e"
 
 COPY . .
 
@@ -41,3 +59,8 @@ RUN pnpm --filter @shortlisted/db build \
 
 ENV NODE_ENV=production
 ENV TYPST_BIN=/usr/local/bin/typst
+# Tells the setup page that the sign-in commands need the Compose prefix.
+ENV SHORTLISTED_DOCKER=1
+# The release workflow passes the tag. Set last so it never invalidates the build layers.
+ARG SHORTLISTED_VERSION=dev
+ENV SHORTLISTED_VERSION=${SHORTLISTED_VERSION}
