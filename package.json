@@ -19,6 +19,7 @@
     "worker": "pnpm --filter @shortlisted/worker dev",
     "web": "pnpm --filter @shortlisted/web dev",
     "ext:build": "pnpm --filter @shortlisted/extension build",
+    "e2e": "pnpm --filter @shortlisted/e2e e2e",
     "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,md,css}\""
   },
   "devDependencies": {

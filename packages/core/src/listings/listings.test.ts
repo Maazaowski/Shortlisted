@@ -317,3 +317,16 @@ describe("classifyListing", () => {
     expect(feedFamilies({ remote, sponsorship: { visa: "refused", relocation: "offered", evidence: null }, licensedSponsor: [] })).toEqual(["remote"]);
   });
 });
+
+describe("wordings found by the end-to-end fixtures", () => {
+  it("reads a bare Node as the node skill", () => {
+    expect(extractSkills("Must have: Postgres, TypeScript, Node, Docker.")).toContain("node");
+    expect(extractSkills("We run many Kubernetes nodes.")).not.toContain("node");
+  });
+
+  it("reads open worldwide as anywhere", () => {
+    const scope = remoteScope("Remote", "A fully remote role open worldwide. You will keep our services running.", {});
+    expect(scope.allowed).toEqual(["WORLD"]);
+    expect(scope.confidence).toBe("likely");
+  });
+});

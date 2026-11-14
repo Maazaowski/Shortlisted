@@ -20,6 +20,7 @@ export function ApplicationLive({ initial, fullName }: { initial: ApplicationVie
   const [coverDraft, setCoverDraft] = useState("");
   const [allMessages, setAllMessages] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [detailsSaved, setDetailsSaved] = useState(false);
   const [note, setNote] = useState("");
   const [regenNote, setRegenNote] = useState("");
   const [rejecting, setRejecting] = useState(false);
@@ -86,15 +87,15 @@ export function ApplicationLive({ initial, fullName }: { initial: ApplicationVie
   const shownMessages = allMessages ? [...messages.now, ...messages.others] : messages.now;
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[1fr_300px]">
-      <div className="flex flex-col gap-8">
+    <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="flex min-w-0 flex-col gap-8">
         <header className="enter">
           <div className="flex flex-wrap items-center gap-4">
             <StageTag stage={stage} />
             <VerdictTag verdict={app.fitVerdict} score={app.fitScore} />
             <span className="num ml-auto text-xs text-ink-3">Captured {fmt(app.createdAt)}</span>
           </div>
-          <h1 className="display mt-3 text-[34px]">{app.job.title ?? "Reading posting"}</h1>
+          <h1 className="display mt-3 text-[34px]">{app.job.title ?? (generating || app.needsReply ? "Reading posting" : "Untitled posting")}</h1>
           <p className="mt-2 flex flex-wrap items-center gap-x-3 text-ink-2">
             {app.job.company && <span>{app.job.company}</span>}
             {app.job.url && (
@@ -180,7 +181,7 @@ export function ApplicationLive({ initial, fullName }: { initial: ApplicationVie
             <ul className="mt-2 flex flex-col gap-1.5">
               {app.resume.flags.map((f, i) => (
                 <li key={i} className="flex gap-2">
-                  <span className="num shrink-0 text-[11px] text-ink-3">{f.kind}</span>
+                  <span className="num shrink-0 text-[11px] text-ink-3">{FLAG_LABEL[f.kind] ?? "Check"}</span>
                   <span>{f.detail}</span>
                 </li>
               ))}
@@ -191,11 +192,11 @@ export function ApplicationLive({ initial, fullName }: { initial: ApplicationVie
         {app.resume?.hasFile && (
           <section className="enter" style={{ "--i": 5 } as React.CSSProperties}>
             <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="label">
+              <h2 className="label shrink-0">
                 Resume <span className="text-ink-3">v{app.resume.version}</span>
               </h2>
-              <a className="btn btn-sm" href={`/api/documents/${app.resume.id}/file`}>
-                <Download size={13} strokeWidth={1.75} /> {app.resume.fileName}
+              <a className="btn btn-sm min-w-0" href={`/api/documents/${app.resume.id}/file`} title={app.resume.fileName}>
+                <Download size={13} strokeWidth={1.75} className="shrink-0" /> <span className="truncate">{app.resume.fileName}</span>
               </a>
             </div>
             <iframe title="Resume preview" src={`/api/documents/${app.resume.id}/file?inline=1`} className="h-[760px] w-full rounded-[var(--radius)] border border-hair bg-white" />
@@ -284,10 +285,14 @@ export function ApplicationLive({ initial, fullName }: { initial: ApplicationVie
           )}
         </section>
 
-        {!generating && !app.needsReply && app.generationStatus !== "SKIPPED" && (
+        {!generating && !app.needsReply && (
           <section className="enter border-t border-hair pt-6" style={{ "--i": 7 } as React.CSSProperties}>
-            <h2 className="label">Regenerate</h2>
-            <p className="hint">Same posting, a fresh selection. Add an instruction if you want it steered.</p>
+            <h2 className="label">{app.generationStatus === "SKIPPED" ? "Try again" : "Regenerate"}</h2>
+            <p className="hint">
+              {app.generationStatus === "SKIPPED"
+                ? "After you add a missing skill to your bank, this scores the posting again and tailors it if the fit is no longer poor."
+                : "Same posting, a fresh selection. Add an instruction if you want it steered."}
+            </p>
             <div className="mt-3 flex flex-col gap-2 sm:flex-row">
               <input className="field" placeholder="e.g. lead with the ledger work" value={regenNote} onChange={(e) => setRegenNote(e.target.value)} aria-label="Regenerate instruction" />
               <button className="btn shrink-0" disabled={busy} onClick={() => post("/regenerate", { note: regenNote || null })}>
@@ -366,7 +371,15 @@ export function ApplicationLive({ initial, fullName }: { initial: ApplicationVie
           </div>
         </section>
 
-        <Details key={`${app.contact.name}|${app.contact.email}|${app.contact.url}|${app.interviewAt}|${app.deadlineAt}`} app={app} busy={busy} save={(body) => post("/details", body)} />
+        <Details key={`${app.contact.name}|${app.contact.email}|${app.contact.url}|${app.interviewAt}|${app.deadlineAt}`} app={app}
+          busy={busy}
+          saved={detailsSaved}
+          save={async (body) => {
+            const ok = await post("/details", body);
+            setDetailsSaved(ok);
+            return ok;
+          }}
+        />
 
         <section className="enter" style={{ "--i": 3 } as React.CSSProperties}>
           <h2 className="label">Timeline</h2>
@@ -439,7 +452,7 @@ function Message({ message: m, email }: { message: FollowupTemplate; email: stri
             {copied ? <Check size={13} strokeWidth={2} /> : <Copy size={13} strokeWidth={1.75} />} {copied ? "Copied" : "Copy"}
           </button>
           {email && (
-            <a className="btn btn-sm" href={`mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`}>
+            <a className="btn btn-sm" href={`mailto:${encodeURIComponent(email).replace(/%40/g, "@")}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`}>
               <Mail size={13} strokeWidth={1.75} /> Open in mail
             </a>
           )}
@@ -451,14 +464,25 @@ function Message({ message: m, email }: { message: FollowupTemplate; email: stri
   );
 }
 
-/** The contact and the dates the user keeps. Remounted (by key) when the saved values change. */
-function Details({ app, busy, save }: { app: ApplicationView; busy: boolean; save: (body: unknown) => Promise<boolean> }) {
+const FLAG_LABEL: Record<string, string> = {
+  missing_bullet: "Dropped line",
+  missing_entry: "Dropped role",
+  missing_certification: "Dropped certificate",
+  added_number: "Added number",
+  new_term: "New term",
+  summary_number: "Number in summary",
+  cover_number: "Number in letter",
+  cover_term: "Name in letter",
+  empty: "Empty",
+};
+
+/** The contact and the dates the user keeps. Remounted (by key) when the saved values change, so "Saved." lives in the parent. */
+function Details({ app, busy, saved, save }: { app: ApplicationView; busy: boolean; saved: boolean; save: (body: unknown) => Promise<boolean> }) {
   const [name, setName] = useState(app.contact.name ?? "");
   const [email, setEmail] = useState(app.contact.email ?? "");
   const [url, setUrl] = useState(app.contact.url ?? "");
   const [interview, setInterview] = useState(app.interviewAt?.slice(0, 10) ?? "");
   const [deadline, setDeadline] = useState(app.deadlineAt?.slice(0, 10) ?? "");
-  const [saved, setSaved] = useState(false);
   const company = app.job.company;
   const search = (q: string) => `https://www.google.com/search?q=${encodeURIComponent(q)}`;
   return (
@@ -468,8 +492,7 @@ function Details({ app, busy, save }: { app: ApplicationView; busy: boolean; sav
         className="mt-3 flex flex-col gap-2.5"
         onSubmit={async (e) => {
           e.preventDefault();
-          const ok = await save({ contactName: name || null, contactEmail: email || null, contactUrl: url || null, interviewAt: interview || null, deadlineAt: deadline || null });
-          setSaved(ok);
+          await save({ contactName: name || null, contactEmail: email || null, contactUrl: url || null, interviewAt: interview || null, deadlineAt: deadline || null });
         }}
       >
         <label>

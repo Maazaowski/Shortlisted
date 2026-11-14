@@ -53,7 +53,7 @@ const EXCLUSIONS: RegExp[] = [
   /\bexcluding\b/i,
 ];
 
-const WORLD_IN_BODY = /\b(work from anywhere|anywhere in the world|from anywhere|hire (people |talent )?(from )?(anywhere|globally|worldwide|all over the world)|any country|location[- ]agnostic|regardless of (your )?location|no matter where you (live|are))\b/i;
+const WORLD_IN_BODY = /\b(work from anywhere|(open|available|remote) (worldwide|globally)|worldwide remote|fully remote worldwide|anywhere in the world|from anywhere|hire (people |talent )?(from )?(anywhere|globally|worldwide|all over the world)|any country|location[- ]agnostic|regardless of (your )?location|no matter where you (live|are))\b/i;
 const TIMEZONE = /\b(time ?zones?|overlap|working hours|business hours)\b[^.]*\b(EST|EDT|PST|PDT|CST|CET|CEST|GMT|UTC|ET|PT|BST|IST|eastern|pacific|central european)\b/i;
 
 function sentences(text: string): string[] {

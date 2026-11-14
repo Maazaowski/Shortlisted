@@ -9,3 +9,5 @@ data
 .git
 .claude
 **/*.tsbuildinfo
+e2e/*
+!e2e/package.json

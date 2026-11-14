@@ -59,6 +59,8 @@ export async function createApplicationFromCapture(userId: string, capture: Capt
   const manual = provider() === "manual";
 
   const result = await withUser(userId, async (tx) => {
+    // Without a bank there is nothing to select from, and the application would sit unfinished forever.
+    if ((await tx.bankBullet.count({ where: { userId } })) === 0) throw new Error("Your experience bank is empty. Import your resume first, then tailor.");
     let job = await tx.job.findFirst({ where: { userId, contentHash: n.contentHash } });
     if (!job && capture.url) job = await tx.job.findFirst({ where: { userId, url: capture.url } });
     if (job) {

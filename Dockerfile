@@ -44,7 +44,9 @@ COPY apps/extension/package.json apps/extension/
 COPY packages/db/package.json packages/db/
 COPY packages/core/package.json packages/core/
 COPY packages/feed/package.json packages/feed/
-RUN pnpm install --frozen-lockfile
+COPY e2e/package.json e2e/
+# The end-to-end tests are a workspace so the lockfile matches, but nothing of theirs is installed here.
+RUN pnpm install --frozen-lockfile --filter "!@shortlisted/e2e"
 
 COPY . .
 

@@ -116,7 +116,7 @@ function Card({ card: c }: { card: BoardCard }) {
         </div>
       ) : (
         <>
-          <div className="truncate text-[13px] font-medium leading-snug">{c.title ?? "Reading posting"}</div>
+          <div className="truncate text-[13px] font-medium leading-snug">{c.title ?? (c.generationStatus === "FAILED" ? "Untitled posting" : "Reading posting")}</div>
           <div className="truncate text-xs text-ink-2">{c.company ?? "\u00a0"}</div>
         </>
       )}

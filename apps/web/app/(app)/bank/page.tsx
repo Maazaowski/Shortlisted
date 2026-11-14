@@ -9,6 +9,7 @@ import {
   deleteBulletAction,
   deleteEntryAction,
   updateBulletAction,
+  updateEntryAction,
   updateProfileAction,
 } from "@/app/actions/bank";
 
@@ -133,8 +134,8 @@ export default async function BankPage() {
               <Field label="Title" name="title" required />
               <Field label="Location" name="location" />
               <div className="grid grid-cols-2 gap-3">
-                <Field label="Start" name="startDate" placeholder="YYYY-MM" />
-                <Field label="End" name="endDate" placeholder="YYYY-MM or blank" />
+                <Field label="Start" name="startDate" placeholder="YYYY-MM" pattern="\d{4}-\d{1,2}" title="Year and month, like 2022-03" />
+                <Field label="End" name="endDate" placeholder="YYYY-MM or blank" pattern="\d{4}-\d{1,2}" title="Year and month, like 2022-03, or leave blank" />
               </div>
               <Field label="URL" name="url" placeholder="https://" />
               <button className="btn">Add</button>
@@ -163,6 +164,31 @@ export default async function BankPage() {
                   </button>
                 </form>
               </div>
+
+              <details className="group mt-2">
+                <summary className="cursor-pointer list-none text-xs text-ink-2 hover:text-ink" aria-label={`Edit details of ${e.title}`}>
+                  Edit details
+                </summary>
+                <form action={updateEntryAction} className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <input type="hidden" name="id" value={e.id} />
+                  <label className="block">
+                    <span className="field-label">Kind</span>
+                    <select name="kind" className="field" defaultValue={e.kind}>
+                      <option value="ROLE">Role</option>
+                      <option value="PROJECT">Project</option>
+                    </select>
+                  </label>
+                  <Field label="Company or project name" name="organization" defaultValue={e.organization} required />
+                  <Field label="Title" name="title" defaultValue={e.title} required />
+                  <Field label="Location" name="location" defaultValue={e.location ?? ""} />
+                  <Field label="Start" name="startDate" defaultValue={e.startDate ?? ""} placeholder="YYYY-MM" pattern="\d{4}-\d{1,2}" title="Year and month, like 2022-03" />
+                  <Field label="End" name="endDate" defaultValue={e.endDate ?? ""} placeholder="YYYY-MM or blank" pattern="\d{4}-\d{1,2}" title="Year and month, like 2022-03, or leave blank" />
+                  <Field label="URL" name="url" defaultValue={e.url ?? ""} placeholder="https://" />
+                  <div className="flex items-end">
+                    <button className="btn btn-sm">Save details</button>
+                  </div>
+                </form>
+              </details>
 
               <ul className="mt-2 flex flex-col divide-y divide-hair">
                 {e.bullets.map((b) => (
@@ -210,11 +236,11 @@ export default async function BankPage() {
   );
 }
 
-function Field({ label, name, defaultValue, required, placeholder, hint }: { label: string; name: string; defaultValue?: string; required?: boolean; placeholder?: string; hint?: string }) {
+function Field({ label, name, defaultValue, required, placeholder, hint, pattern, title }: { label: string; name: string; defaultValue?: string; required?: boolean; placeholder?: string; hint?: string; pattern?: string; title?: string }) {
   return (
     <label className="block">
       <span className="field-label">{label}</span>
-      <input name={name} defaultValue={defaultValue} className="field" required={required} placeholder={placeholder} />
+      <input name={name} defaultValue={defaultValue} className="field" required={required} placeholder={placeholder} pattern={pattern} title={title} />
       {hint && <span className="hint">{hint}</span>}
     </label>
   );

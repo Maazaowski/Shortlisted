@@ -87,7 +87,22 @@ rule down the left.
 
 `.claude/launch.json` defines a `web` preview config for the in-app browser.
 
-**Extension end-to-end test.** `apps/extension/e2e/run.mjs` launches a throwaway Chrome with
+**End-to-end tests.** `pnpm e2e` runs the Playwright suite in `e2e/` (its own workspace,
+`@shortlisted/e2e`). `global-setup.ts` builds web, worker and extension, creates two throwaway
+databases on the Compose Postgres (`shortlisted_e2e_manual`, `shortlisted_e2e_cli`), writes a
+fixture feed through the real classifier (`feed-fixture.ts`), and starts `next start` plus a worker
+for each on ports 3041 and 3042, so the real data is never touched. Three projects run in order on
+one worker: `manual` (paste mode, the whole product from an empty install), `cli`
+(`SHORTLISTED_PROVIDER=claude-cli` with `CLAUDE_BIN` pointing at `e2e/fake-cli`, a stand-in that
+answers the import, parse and select prompts from fixed rules) and `extension` (the unpacked
+extension in Playwright's Chromium). Files in a project run in name order and build on each
+other. `E2E_SKIP_BUILD=1` reuses the last build; logs are in `e2e/.tmp/logs`. The Dockerfile
+copies `e2e/package.json` so the lockfile matches and installs with
+`--filter "!@shortlisted/e2e"`; `.dockerignore` keeps the rest of `e2e/` out of the image.
+`.github/workflows/e2e.yml` runs the suite on pull requests. See `e2e/README.md`, and
+`docs/test-findings.md` for what the first full pass found.
+
+**Extension end-to-end test (older script).** `apps/extension/e2e/run.mjs` launches a throwaway Chrome with
 `apps/extension/dist` loaded, opens a local fixture posting (`e2e/fixtures/ledgerly.html`, with a
 JSON-LD block and an application form), runs the panel page as a background tab in the same
 window, and drives capture, prompt, pasted reply (`e2e/fixtures/reply.json`), generation, Attach
@@ -312,8 +327,9 @@ Check `stop_reason === "refusal"` before reading output (`ModelRefusedError`).
   are set. Add new API routes the same way.
 - Dates in the bank are `YYYY-MM` strings. Skill tags are lowercase and pass through
   `normalizeSkills()` on write.
-- Tests are Vitest next to the source (`*.test.ts`). Pure functions in `packages/core` get tests;
-  UI does not yet.
+- Unit tests are Vitest next to the source (`*.test.ts`), for pure functions in `packages/core`.
+  Pages, API routes, the worker and the extension are covered by the Playwright suite in `e2e/`.
+  A change to visible text or a label usually needs the matching locator in `e2e/tests` updated.
 - `noUncheckedIndexedAccess` is on everywhere; index results are `T | undefined`.
 - Line endings are LF (`.gitattributes`). No shell scripts in the Docker path; Compose uses
   `command:` arrays.
@@ -331,6 +347,14 @@ Check `stop_reason === "refusal"` before reading output (`ModelRefusedError`).
   `apps/extension/sidepanel.css` and follows the system scheme.
 
 ## Status
+
+Verified on 13 Nov 2026 by `pnpm e2e` (108 tests) and `pnpm test` (213): paste mode end to end
+from an empty install, the automatic path against the stand-in tool, the extension (capture,
+reply, Attach, stage change), jobs pools and filters against a fixture feed, the tracker
+additions, export, and the Docker image build. Still not verified: a real signed-in Claude Code
+or Codex, the anthropic provider, the setup scripts on a clean machine, the release and feed
+workflows, and the extension on live job sites. `docs/test-findings.md` lists the open caveats
+and missing features (no delete for an application, no restore from the export, among others).
 
 Verified on 11 Sep 2026: the single-user conversion, the init migration, the seed, the board,
 bank, generate, dashboard and detail pages, `/api/me`, capture and URL lookup without auth, the

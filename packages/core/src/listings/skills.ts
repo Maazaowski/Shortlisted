@@ -10,7 +10,7 @@ const VOCABULARY = [
   // languages
   "javascript", "typescript", "python", "java", "c#", "c++", "ruby", "php", "rust", "golang", "kotlin", "swift", "scala", "elixir", "perl", "objective-c", "dart", "solidity", "bash", "powershell", "sql",
   // frameworks and runtimes
-  "react", "react native", "vue", "angular", "svelte", "next.js", "nuxt", "node.js", "express", "nestjs", "django", "flask", "fastapi", "ruby on rails", "rails", "laravel", "spring", "spring boot", ".net", "flutter", "graphql", "grpc", "rest", "microservices", "html", "css", "sass", "tailwind", "webpack", "redux",
+  "react", "react native", "vue", "angular", "svelte", "next.js", "nuxt", "node.js", "nodejs", "node", "express", "nestjs", "django", "flask", "fastapi", "ruby on rails", "rails", "laravel", "spring", "spring boot", ".net", "flutter", "graphql", "grpc", "rest", "microservices", "html", "css", "sass", "tailwind", "webpack", "redux",
   // data stores and pipelines
   "postgresql", "postgres", "mysql", "mongodb", "redis", "elasticsearch", "dynamodb", "cassandra", "kafka", "rabbitmq", "snowflake", "bigquery", "redshift", "databricks", "spark", "hadoop", "airflow", "dbt", "etl", "nosql",
   // cloud and operations

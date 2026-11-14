@@ -11,3 +11,6 @@ packages/db/generated/
 *.log
 .DS_Store
 Thumbs.db
+
+# The recorded walkthrough is large. Re-record it with e2e/walkthrough, see e2e/README.md.
+docs/video/

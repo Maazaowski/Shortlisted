@@ -1,0 +1,24 @@
+{
+  "name": "@shortlisted/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "e2e": "playwright test",
+    "e2e:manual": "playwright test --project=manual",
+    "e2e:cli": "playwright test --project=cli",
+    "e2e:extension": "playwright test --project=extension",
+    "e2e:report": "playwright show-report report",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@shortlisted/core": "workspace:*",
+    "@types/chrome": "^0.2.9",
+    "@types/node": "^22.20.2",
+    "@types/pg": "^8.11.10",
+    "pg": "^8.13.1",
+    "pg-boss": "^12.30.0",
+    "typescript": "^5.9.3"
+  }
+}

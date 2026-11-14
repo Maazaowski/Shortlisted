@@ -67,6 +67,8 @@ Light and dark, three accent colours, chosen from Appearance in the header.
 
 ## Quick start
 
+New to this kind of tool? [The step by step guide](docs/guide.md) covers the same setup in plain words, then how to use every page.
+
 You need two things: [Docker Desktop](https://www.docker.com/products/docker-desktop/), installed and open, and Chrome. Nothing else.
 
 **1. Get Shortlisted.** On the GitHub page, click the green Code button, then Download ZIP, and unzip it. If you use Git, clone it instead:
