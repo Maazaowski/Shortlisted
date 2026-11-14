@@ -1,5 +1,6 @@
 import { Prisma, withUser } from "@shortlisted/db";
 import {
+  PROVIDERS,
   ParsedJobSchema,
   SelectionSchema,
   TypstNotFoundError,
@@ -12,6 +13,7 @@ import {
   resumeFileName,
   scoreFit,
   selectForJob,
+  setProviderChoice,
   storageFromEnv,
   validateCoverLetter,
   validateSelection,
@@ -20,7 +22,7 @@ import {
 import { REPO_ROOT } from "./env.js";
 import { loadBank } from "./bank.js";
 
-export type GenerateJob = { applicationId: string; userId: string; note?: string | null };
+export type GenerateJob = { applicationId: string; userId: string; note?: string | null; /** Tailor even on a poor fit. */ force?: boolean };
 
 const storage = storageFromEnv(REPO_ROOT);
 
@@ -32,6 +34,10 @@ export async function runGeneration(job: GenerateJob): Promise<void> {
   const { applicationId, userId, note } = job;
 
   try {
+    // The model choice made in the app can change between jobs, so it is read each time.
+    const stored = await withUser(userId, (tx) => tx.preferences.findUnique({ where: { userId }, select: { provider: true } }));
+    setProviderChoice(PROVIDERS.find((p) => p === stored?.provider) ?? null);
+
     // Load and mark running.
     const ctx = await withUser(userId, async (tx) => {
       const app = await tx.application.findUnique({ where: { id: applicationId }, include: { job: true } });
@@ -78,7 +84,7 @@ export async function runGeneration(job: GenerateJob): Promise<void> {
     );
     // A poor fit stops the pipeline to save the select call. With a pasted
     // reply there is nothing to save and the user has already done the work.
-    if (fit.verdict === "POOR" && !pasted) {
+    if (fit.verdict === "POOR" && !pasted && !job.force) {
       await withUser(userId, (tx) =>
         tx.application.update({
           where: { id: applicationId },

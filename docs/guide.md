@@ -76,7 +76,14 @@ A page called **Finish setting up** opens. It has four rows. Each row gets a tic
 
 ### Row 1. A model to do the writing
 
-This is ticked already if the setup went well. If you chose Claude or ChatGPT, click **Test it**. It should say "It answered."
+Pick how the writing is done. You can change this any time under **Settings**.
+
+- **Copy and paste.** Free, no sign-in. This is what you get if you do nothing.
+- **My Claude plan** or **My ChatGPT plan.** Click it, then click **Sign in**, then **Open the sign-in page**.
+  - For Claude: sign in on that page, copy the code it gives you, paste it into Shortlisted, and click **Finish sign-in**.
+  - For ChatGPT: Shortlisted shows a short code. Type it on that page. Shortlisted notices by itself when you are done.
+
+Then click **Test it**. It should say "It answered."
 
 ### Row 2. Your resume
 
@@ -176,7 +183,7 @@ Open **Paste** in the top menu, paste the whole job post, and click **Tailor**.
 
 - Type a short instruction under **Regenerate**, such as "lead with the sales work", and click **Regenerate**.
 - To change the cover letter yourself, click **Edit**, change the text, and click **Save**. Shortlisted checks your new text and makes a new PDF.
-- If it says **Poor fit. Nothing generated.**, the job asks for skills your bank does not show. If you do have one of them, add it to a line in your bank, then come back and click **Regenerate**.
+- If it says **Poor fit. Nothing generated.**, the job asks for skills your bank does not show. If you do have one of them, add it to a line in your bank, then come back and click **Regenerate**. If you want to apply anyway, click **Tailor anyway**. The missing skills stay marked as missing and are not added to your resume.
 
 ## Part 6. Keep track
 
@@ -232,7 +239,7 @@ docker compose up -d
 | The Jobs page is empty | The list takes up to a minute the first time. Refresh the page. If a message says the list could not be downloaded, check your internet and click **Check now**. Wait five minutes before clicking it again. |
 | "That PDF has almost no text. Is it a scan?" | Your resume is a picture, not text. Save it again from Word or Google Docs as a PDF, or upload the Word file. |
 | "No JSON object found in the reply" | You did not copy the whole reply. Copy everything the chat assistant wrote, from the first `{` to the last `}`, and paste again. |
-| "Claude Code exited with code 1" and a line about signing in | Your sign-in ran out. In a terminal in the Shortlisted folder, run `docker compose exec worker claude auth login`, then click **Regenerate**. |
+| "Claude Code exited with code 1" and a line about signing in | Your sign-in ran out. Open **Settings**, click **Sign in** under **How the writing is done**, then click **Regenerate** on the job. |
 | The extension says it cannot connect | Click **Settings** inside the extension and type the address from your bookmark, for example `http://localhost:3000`. |
 | **Attach** says there is no file box | Open the application form first, so the upload box is on the page, then click **Attach** again. If it still fails, upload the downloaded PDF by hand. |
 | A card is stuck in Saved with "Generation failed" | Open it, read the red message, and click **Regenerate**. If you do not want the job, click **Withdraw** to move it out of the way. |

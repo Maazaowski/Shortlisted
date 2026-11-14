@@ -1,5 +1,5 @@
 import type { Bank, ParsedJob } from "./schemas.js";
-import { normalizeSkills, skillCovered } from "./skills.js";
+import { expandSkills, skillCovered } from "./skills.js";
 
 export type Verdict = "STRONG" | "GOOD" | "POSSIBLE" | "POOR";
 
@@ -19,7 +19,7 @@ export function bankSkillSet(bank: Bank): Set<string> {
   const all: string[] = [];
   for (const g of bank.skillGroups) all.push(...g.skills);
   for (const e of bank.entries) for (const b of e.bullets) all.push(...b.skills);
-  return new Set(normalizeSkills(all));
+  return new Set(expandSkills(all));
 }
 
 /**
@@ -40,6 +40,8 @@ export function scoreFit(bank: Bank, job: ParsedJob): FitResult {
   const score = Math.round(mustRatio * 85 + niceRatio * 15);
 
   let verdict: Verdict;
+  // A posting that names no required skill cannot be scored. Saying "strong, 100" would be a guess.
+  if (must.length === 0) return { verdict: "POSSIBLE", score: Math.round(50 + (nice.length ? niceRatio * 15 : 0)), gaps, covered, niceToHaveCovered };
   if (mustRatio >= 0.8) verdict = "STRONG";
   else if (mustRatio >= 0.6) verdict = "GOOD";
   else if (mustRatio >= 0.4) verdict = "POSSIBLE";

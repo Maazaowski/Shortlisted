@@ -70,7 +70,10 @@ describe("scoreFit", () => {
     expect(r.score).toBeLessThan(40);
   });
 
-  it("is strong when the posting lists nothing", () => {
-    expect(scoreFit(bank, job([])).verdict).toBe("STRONG");
+  it("does not call it strong when the posting names no required skill", () => {
+    // Found on a live run: a page whose requirements were not captured scored "strong, 100".
+    const fit = scoreFit(bank, job([]));
+    expect(fit.verdict).toBe("POSSIBLE");
+    expect(fit.score).toBe(50);
   });
 });

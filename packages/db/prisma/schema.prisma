@@ -262,6 +262,9 @@ model Preferences {
   weeklyGoal      Int?
   /// Where the job feed is downloaded from. Null means the default feed.
   feedUrl         String?
+  /// How the model is reached, chosen in the app: manual, claude-cli,
+  /// codex-cli or anthropic. Null means whatever the .env file says.
+  provider        String?
   /// Set when the user saves the settings form, so the checklist can tell
   /// a deliberate choice from the defaults.
   savedAt         DateTime?

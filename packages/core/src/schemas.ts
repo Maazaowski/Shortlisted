@@ -78,7 +78,7 @@ export const ParsedJobSchema = z.object({
   company: z.string(),
   location: z.string().nullable(),
   seniority: z.enum(["intern", "junior", "mid", "senior", "staff", "lead", "manager", "unknown"]),
-  mustHaveSkills: z.array(z.string()).describe("Required skills and technologies, lowercase, one per item"),
+  mustHaveSkills: z.array(z.string()).describe("Concrete technologies and named methods the posting requires, lowercase, one per item, at most twelve. Alternatives joined with ' or '"),
   niceToHaveSkills: z.array(z.string()).describe("Preferred skills, lowercase, one per item"),
   keywords: z.array(z.string()).describe("Other phrases a screener would search for"),
   responsibilities: z.array(z.string()),

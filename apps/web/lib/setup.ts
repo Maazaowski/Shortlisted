@@ -22,6 +22,8 @@ export type ModelStatus =
 
 export type SetupStatus = {
   model: ModelStatus;
+  /** What the choice screen needs, whichever way is chosen. */
+  choice: { current: Provider; installed: boolean; ready: boolean; hasApiKey: boolean };
   bank: { ready: boolean; bullets: number };
   preferences: { ready: boolean };
   extension: { ready: boolean; seenAt: Date | null };
@@ -68,6 +70,12 @@ export async function setupStatus(userId: string): Promise<SetupStatus> {
   };
   return {
     model,
+    choice: {
+      current: model.provider,
+      installed: "installed" in model ? model.installed : true,
+      ready: model.ready,
+      hasApiKey: Boolean(process.env.ANTHROPIC_API_KEY),
+    },
     bank,
     preferences,
     extension,

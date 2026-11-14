@@ -56,6 +56,8 @@ async function waitFor(what: string, check: () => Promise<boolean>, seconds: num
 }
 
 export default async function globalSetup(): Promise<() => Promise<void>> {
+  // The real-model run brings its own install and needs none of the test stacks.
+  if (process.env.E2E_REAL === "1") return async () => {};
   rmSync(TMP, { recursive: true, force: true });
   mkdirSync(path.join(TMP, "logs"), { recursive: true });
 

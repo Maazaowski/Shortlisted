@@ -107,7 +107,7 @@ test.describe("tailoring without pasting", () => {
     test.setTimeout(120_000);
     const id = await paste(page, posting({ title: "Backend Engineer", company: "Signedout Ltd", must: ["Postgres"], extra: "FAKE_FAIL" }));
     await expect(page.getByText(/Claude Code exited with code 1/)).toBeVisible({ timeout: 90_000 });
-    await expect(page.getByRole("main")).toContainText("claude auth login");
+    await expect(page.getByRole("main")).toContainText("Open Settings in Shortlisted, sign in again");
     await expect(page.getByRole("heading", { name: "Untitled posting", level: 1 })).toBeVisible();
     await expect(page.getByRole("button", { name: "Regenerate" })).toBeVisible();
     expect(await appRow(id)).toMatchObject({ stage: "SAVED", generationStatus: "FAILED" });
@@ -151,5 +151,17 @@ test.describe("key requirements on a role from the job list", () => {
     expect(job?.parsed?.mustHaveSkills).toEqual(["postgres", "typescript", "node", "docker"]);
     const [linked] = await sql<{ applicationId: string | null }>("cli", `SELECT "applicationId" FROM "Listing" WHERE id = $1`, [listingId]);
     expect(linked?.applicationId).toBe(applicationId);
+  });
+});
+
+test.describe("applying despite a poor fit", () => {
+  test("tailor anyway builds the documents and keeps the honest score", async ({ page }) => {
+    const id = await paste(page, posting({ title: "Welding Inspector", company: "Ironbridge Works", location: "Leeds", must: ["Welding", "Metallurgy", "Radiography", "Site safety"] }));
+    await expect(page.getByText("Poor fit. Nothing generated.")).toBeVisible({ timeout: 30_000 });
+    await page.getByRole("button", { name: "Tailor anyway" }).click();
+    await waitForDocuments(page);
+    expect(await appRow(id)).toMatchObject({ stage: "GENERATED", generationStatus: "DONE", fitVerdict: "POOR" });
+    // The missing skills are still shown as missing. Nothing was added to make the fit look better.
+    await expect(page.getByText("Must-haves it does not cover")).toBeVisible();
   });
 });

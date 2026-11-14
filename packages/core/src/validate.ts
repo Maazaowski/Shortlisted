@@ -72,6 +72,34 @@ const LETTER_WORDS = new Set("dear hiring manager team sincerely regards best ki
  * is text the letter may quote freely, such as the job title, the company and
  * the contact's name. Nothing is changed; the flags are for the user to read.
  */
+const DENIAL = /^(not|no|never|without|cannot|n't|lack|lacks|lacking|none|neither|nor)$/;
+const CONTRAST = /^(but|however|though|although|while|whereas|yet|instead)$/;
+
+/**
+ * Words that appear in the letter only after a denial in the same clause:
+ * "I do not hold NMC registration", "in C# and Python rather than Rust". The
+ * denial stops at "but", "however" and the like, so in "I have not used Go but
+ * I led Kubernetes migrations" Kubernetes is still a claim. A word that is
+ * also used outside a denial anywhere in the letter is not returned.
+ */
+function deniedTerms(text: string): Set<string> {
+  const deniedOnly = new Set<string>();
+  const claimed = new Set<string>();
+  for (const sentence of text.split(/(?<=[.!?;])\s+|\n+/)) {
+    let negated = false;
+    const tokens = sentence.toLowerCase().replace(/rather than/g, "not").replace(/n't\b/g, " not").match(/[a-z0-9#+.'-]+/g) ?? [];
+    for (const raw of tokens) {
+      const word = raw.replace(/[.']+$/, "");
+      if (!word) continue;
+      if (DENIAL.test(word)) negated = true;
+      else if (CONTRAST.test(word)) negated = false;
+      else (negated ? deniedOnly : claimed).add(word);
+    }
+  }
+  for (const word of claimed) deniedOnly.delete(word);
+  return deniedOnly;
+}
+
 export function validateCoverLetter(bank: Bank, text: string, allow: string[] = []): ValidationFlag[] {
   const flags: ValidationFlag[] = [];
   const corpus = bankCorpus(bank);
@@ -89,9 +117,12 @@ export function validateCoverLetter(bank: Bank, text: string, allow: string[] = 
   // A sentence starts with a capital whatever the word is, so the first letter of each is lowered before looking for terms.
   // Then full stops go, so "reading." is the word and not a term with a dot in it.
   const body = text.replace(/(^|[.!?:]\s+|\n\s*)([A-Z])(?=[a-z])/g, (_m, lead: string, letter: string) => lead + letter.toLowerCase()).replace(/[.](?=\s|$)/g, " ");
+  const denied = deniedTerms(text);
   for (const t of extractTerms(body)) {
     const bare = t.replace(/[.']+$/, "").replace(/'s$/, "");
     if (!bare || LETTER_WORDS.has(bare) || known.includes(bare)) continue;
+    // Named only to say the candidate does not have it. That is the honest sentence, not a claim.
+    if (denied.has(bare.toLowerCase())) continue;
     flags.push({ kind: "cover_term", bulletId: null, detail: `The cover letter names "${bare}", which is not in the bank or the posting's title.` });
   }
   return flags;
@@ -149,8 +180,10 @@ export function validateSelection(bank: Bank, selection: Selection): ValidatedSe
           const srcTerms = new Set(extractTerms(source));
           const srcLower = source.toLowerCase();
           for (const t of extractTerms(reworded)) {
-            if (srcTerms.has(t) || srcLower.includes(t)) continue;
-            flags.push({ kind: "new_term", bulletId: sb.id, detail: `"${t}" does not appear in the original bullet.` });
+            // Moving a clause puts a different word at the end of the sentence. "review." is the word review, not a new term.
+            const bare = t.replace(/[.,;:!?'"]+$/, "");
+            if (!bare || srcTerms.has(t) || srcLower.includes(bare)) continue;
+            flags.push({ kind: "new_term", bulletId: sb.id, detail: `"${bare}" does not appear in the original bullet.` });
           }
           return { id: sb.id, rewording: reworded };
         });

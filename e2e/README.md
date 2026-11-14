@@ -67,3 +67,34 @@ node e2e/walkthrough/join.mjs <path to a full ffmpeg> docs/video/shortlisted-wal
 `walkthrough/release-tour.mjs` records how a release reaches a user: tagging, the GitHub pages, a fresh install of the published image, the update notice and the update. The browser parts are live. The terminal parts replay output saved from the real commands by `walkthrough/capture.mjs`, shown in `walkthrough/terminal.html`.
 
 Run the fresh install in its own folder with `COMPOSE_PROJECT_NAME` set to something other than `shortlisted`, and stop your own `db` container first. The compose file fixes both the project name and the database port, so a second copy on the same computer otherwise becomes the same installation as yours.
+
+## Testing with a real model
+
+`real/real-model.spec.ts` runs the whole automatic path through a real signed-in Claude Code: choosing the plan in the app, the test call, a resume import, key requirements on a live listing, tailoring from a listing and from a pasted posting, regenerate, a poor fit with "Tailor anyway", a page that is not a job, and the extension. It is not part of `pnpm e2e`, because it spends the subscription's usage (about fifteen calls, three minutes) and real replies vary. It checks shape, not wording, and writes everything the model returned to `report.json` for a person to read.
+
+Never point it at the install that holds real data: the import replaces the bank. Start a second, empty copy that shares the sign-in instead. An override file does it:
+
+```yaml
+services:
+  db:
+    ports: !override ["127.0.0.1:5436:5432"]
+  web:
+    ports: !override ["127.0.0.1:3030:3000"]
+    volumes: !override ["<a scratch folder>:/data/files", "cli_auth:/cli"]
+  worker:
+    volumes: !override ["<a scratch folder>:/data/files", "cli_auth:/cli"]
+volumes:
+  cli_auth:
+    external: true
+    name: shortlisted_cli_auth
+```
+
+```bash
+docker compose -p shortlisted-test -f docker-compose.yml -f override.yml up -d
+```
+
+```bash
+E2E_REAL=1 E2E_REAL_URL=http://localhost:3030 E2E_REAL_DB=postgresql://postgres:postgres@127.0.0.1:5436/shortlisted pnpm --filter @shortlisted/e2e exec playwright test --project=real
+```
+
+`docker compose -p shortlisted-test -f docker-compose.yml -f override.yml down -v` removes the copy and leaves the sign-in alone.

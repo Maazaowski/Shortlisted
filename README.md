@@ -100,7 +100,7 @@ The checklist has four rows. Each one is checked for real, and gets a tick when 
 
 | Row | What you do |
 | --- | --- |
-| **1. A model to do the writing** | Already ticked if setup went well. With a Claude or ChatGPT plan, press **Test it**. |
+| **1. A model to do the writing** | Choose copy and paste (free), your Claude plan or your ChatGPT plan. For a plan, press **Sign in** and follow the two steps on the page. |
 | **2. Your resume** | Upload the PDF or Word file you send today. Every line becomes an entry in your bank. The file is not kept. |
 | **3. Where you are and what you want** | Your country, your passport, the pools and career fields you want, your target job titles, and a weekly goal. |
 | **4. The Chrome extension** | Download `shortlisted-extension.zip` from the [latest release](https://github.com/Maazaowski/Shortlisted/releases/latest), unzip it, open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and choose the unzipped folder. |
@@ -174,7 +174,7 @@ The resume is one column of plain text, which screening software reads well.
 
 <p align="center"><img src="docs/screenshots/resume.png" alt="The tailored resume as a PDF" width="820"></p>
 
-If the fit is **Poor**, nothing is written. The page shows the must-haves your bank does not cover. If you do have one, add it to a line in your bank and press **Regenerate**.
+If the fit is **Poor**, nothing is written. The page shows the must-haves your bank does not cover. If you do have one, add it to a line in your bank and press **Regenerate**. To apply regardless, press **Tailor anyway**. The missing skills are still shown as missing and are never added to the resume.
 
 <p align="center"><img src="docs/screenshots/poor-fit.png" alt="A poor fit stops before anything is written" width="820"></p>
 
@@ -239,7 +239,7 @@ Shortlisted needs a language model for two things: turning your resume into the 
 | | Cost | What you do per job | Set up |
 | --- | --- | --- | --- |
 | **Paste mode** (default) | Free | Copy a prompt into any chat assistant, paste the reply back. About a minute. | Nothing |
-| **Your Claude or ChatGPT plan** | Your plan, no extra charge | Nothing. About twenty seconds. | Sign in once |
+| **Your Claude or ChatGPT plan** | Your plan, no extra charge | Nothing. About twenty seconds. | Sign in once, inside the app |
 | **Anthropic API key** | Roughly 4 to 15 cents per job | Nothing. About twenty seconds. | Add a key |
 
 <details>
@@ -253,23 +253,13 @@ Each job gives you a prompt and a paste box. Copy the prompt, paste it into [Cla
 <details>
 <summary><b>Your Claude or ChatGPT plan</b></summary>
 
-Shortlisted uses your plan through the official command line tool, Claude Code or Codex. Both are already inside the Docker image. The setup script asks which one you want and walks you through signing in. To switch later, set this in `.env`:
+Shortlisted uses your plan through the official command line tool, Claude Code or Codex. Both are already inside the Docker image. Everything is done inside the app, with no file to edit and no terminal:
 
-```bash
-SHORTLISTED_PROVIDER=claude-cli     # or codex-cli
-```
+1. Open **Setup** or **Settings** and choose **My Claude plan** or **My ChatGPT plan**.
+2. Press **Sign in**, then **Open the sign-in page**.
+3. For Claude, sign in and paste the code the page gives you back into Shortlisted. For ChatGPT, type the one-time code Shortlisted shows you on that page.
 
-Then restart and sign in once. The command prints a link. Open it, sign in, and paste the code back.
-
-```bash
-docker compose up -d --force-recreate web worker
-```
-
-```bash
-docker compose exec worker claude auth login
-```
-
-For Codex the sign-in is `docker compose exec worker codex login --device-auth`.
+It takes effect straight away. **Test it** sends one short message to check, and **Sign out** is there if you want to switch accounts.
 
 The sign-in is kept in a Docker volume on your computer (`cli_auth`) and nowhere else. The tool runs with no file or web access and only ever receives the prompt text. You sign in to the unmodified tool with your own account, for your own use, on your own computer. Read your plan's terms if you are unsure that this fits them.
 </details>
@@ -373,7 +363,7 @@ The message names the problem: no JSON found, invalid JSON, or a missing field. 
 <details>
 <summary><b>"Claude Code exited with code 1" and a line about signing in</b></summary>
 
-Your sign-in ran out. Run <code>docker compose exec worker claude auth login</code>, then press <b>Regenerate</b>.
+Your sign-in ran out. Open <b>Settings</b>, press <b>Sign in</b> under <b>How the writing is done</b>, then press <b>Regenerate</b> on the application.
 </details>
 
 <details>
@@ -483,8 +473,8 @@ Install [Typst](https://typst.app/) for PDFs on the host (`winget install Typst.
 
 ```bash
 pnpm typecheck      # every workspace
-pnpm test           # 217 unit tests, packages/core
-pnpm e2e            # 108 browser tests, about three minutes
+pnpm test           # 255 unit tests, packages/core
+pnpm e2e            # 117 browser tests, about three minutes
 ```
 
 `pnpm e2e` drives the whole product in a browser against two throwaway copies of the app (paste mode, and the automatic path with a stand-in for Claude Code) plus the extension loaded into Chromium. It never touches your own data. See [`e2e/README.md`](e2e/README.md). It also runs on every pull request.
@@ -518,7 +508,7 @@ Everything lives in one `.env` at the repository root. The setup script creates 
 | Variable | Default | What it does |
 | --- | --- | --- |
 | `WEB_PORT` | `3000` | Port the web app is published on. The extension's address must match. |
-| `SHORTLISTED_PROVIDER` | unset | `manual`, `claude-cli`, `codex-cli` or `anthropic`. Unset means `anthropic` when a key is present, `manual` otherwise. |
+| `SHORTLISTED_PROVIDER` | unset | `manual`, `claude-cli`, `codex-cli` or `anthropic`. Unset means `anthropic` when a key is present, `manual` otherwise. A choice made in the app, under Setup or Settings, comes first. |
 | `SHORTLISTED_CLI_MODEL` | unset | Model name passed to Claude Code or Codex. Unset uses the tool's own default. |
 | `ANTHROPIC_API_KEY` | unset | Only for the `anthropic` provider. |
 | `SHORTLISTED_MODEL` | `claude-opus-5` | Model for the `anthropic` provider. |
@@ -534,9 +524,9 @@ Every port binds to `127.0.0.1`.
 
 ## 📌 Status
 
-Version 0.3 is released and tested end to end: 108 browser tests and 217 unit tests pass, on this repository's own GitHub runners as well as locally. The release, the fresh install from the published image, and the update from one version to the next have each been run for real.
+Version 0.3 is released and tested end to end: 117 browser tests and 255 unit tests pass, on this repository's own GitHub runners as well as locally. The release, the fresh install from the published image, and the update from one version to the next have each been run for real. The automatic path has been run from an empty install through a real signed-in Claude plan.
 
-Not yet proven: a real signed-in Claude Code or Codex session and the API key path (the automatic path is tested with a stand-in), the setup script on a Mac, and the extension on live job sites. The known gaps, such as no way to delete an application, are listed in [`docs/test-findings.md`](docs/test-findings.md).
+Not yet proven: a ChatGPT plan and the API key path, the setup script on a Mac, and the extension on live job sites. The known gaps, such as no way to delete an application, are listed in [`docs/test-findings.md`](docs/test-findings.md).
 
 Bugs and ideas: [open an issue](https://github.com/Maazaowski/Shortlisted/issues).
 

@@ -200,7 +200,7 @@ export async function runCli(
   const detail = lastLines(f.err || f.out, 4) || "It printed nothing.";
   const signedOut = /log(ged)? ?in|authenticat|sign(ed)? ?in|401/i.test(detail);
   const hint = signedOut
-    ? ` Sign in with "${SIGN_IN[kind]}" (in Docker, put "docker compose exec worker" in front), then try again.`
+    ? " Open Settings in Shortlisted, sign in again under How the writing is done, then try again."
     : "";
   throw new CliError(
     `${label} exited with code ${f.code ?? "none"}. ${detail}${/[.!?]$/.test(detail) ? "" : "."}${hint}`,

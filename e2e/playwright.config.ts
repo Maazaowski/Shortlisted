@@ -32,5 +32,7 @@ export default defineConfig({
     { name: "extension", testDir: "./tests/extension", dependencies: ["manual"], use: { baseURL: STACKS.manual.url } },
     // Not a test: records the captioned product tour. Only with E2E_WALKTHROUGH=1, see walkthrough/tour.spec.ts.
     ...(process.env.E2E_WALKTHROUGH === "1" ? [{ name: "walkthrough", testDir: "./walkthrough", use: { baseURL: STACKS.cli.url, trace: "off" as const, screenshot: "off" as const, channel: "chromium", actionTimeout: 20_000 } }] : []),
+    // Not part of the suite: the automatic path against a real signed-in model. Only with E2E_REAL=1, see real/real-model.spec.ts.
+    ...(process.env.E2E_REAL === "1" ? [{ name: "real", testDir: "./real", use: { trace: "off" as const, channel: "chromium", actionTimeout: 30_000 } }] : []),
   ],
 });

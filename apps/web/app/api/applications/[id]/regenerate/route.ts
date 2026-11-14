@@ -2,7 +2,7 @@ import { z } from "zod";
 import { json, preflight, resolveUserId } from "@/lib/api-auth";
 import { getApplicationView, regenerate } from "@/lib/applications";
 
-const Body = z.object({ note: z.string().max(500).nullable().optional() });
+const Body = z.object({ note: z.string().max(500).nullable().optional(), force: z.boolean().optional() });
 
 export async function OPTIONS(req: Request) {
   return preflight(req);
@@ -15,6 +15,6 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   if (!body.success) return json(req, { error: "Invalid body." }, { status: 400 });
   const existing = await getApplicationView(userId, id);
   if (!existing) return json(req, { error: "Not found" }, { status: 404 });
-  await regenerate(userId, id, body.data.note ?? null);
+  await regenerate(userId, id, body.data.note ?? null, body.data.force === true);
   return json(req, await getApplicationView(userId, id));
 }

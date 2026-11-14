@@ -55,4 +55,21 @@ describe("validateCoverLetter", () => {
   it("accepts a year from the bank's dates", () => {
     expect(validateCoverLetter(bank, "I have been at Acme since 2022.", allow)).toEqual([]);
   });
+
+  it("does not flag a skill the letter only says the candidate lacks", () => {
+    // From a live run: the honest sentence about missing skills was the one that got flagged.
+    const flags = validateCoverLetter(bank, "My systems work has been in Postgres rather than Rust, and I have not worked with Kubernetes. I do not hold NMC registration or an Immediate Life Support certificate.");
+    expect(flags).toEqual([]);
+  });
+
+  it("still flags a claim that follows a denial after but", () => {
+    const flags = validateCoverLetter(bank, "I have not used Rust, but I led Kubernetes migrations for two teams.");
+    expect(flags.map((f) => f.detail).join(" ")).toMatch(/kubernetes/i);
+    expect(flags.map((f) => f.detail).join(" ")).not.toMatch(/rust/i);
+  });
+
+  it("still flags a skill that is denied in one sentence and claimed in another", () => {
+    const flags = validateCoverLetter(bank, "I have not used Kubernetes at work. In my own projects I run Kubernetes clusters.");
+    expect(flags.map((f) => f.detail).join(" ")).toMatch(/kubernetes/i);
+  });
 });

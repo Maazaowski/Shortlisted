@@ -96,7 +96,7 @@ function ImportReplyForm({ prompt, fileName }: { prompt: string; fileName: strin
       <input type="hidden" name="prompt" value={prompt} />
       <div className="callout callout-accent">
         <span>
-          Read <span className="font-medium">{fileName}</span>. No API key is set, so the model runs through you: copy the prompt, paste it into Claude, and paste the reply back here.
+          Read <span className="font-medium">{fileName}</span>. Shortlisted is in paste mode, which is free and needs no sign-in: copy the prompt, paste it into Claude or ChatGPT, and paste the reply back here.
         </span>
       </div>
       <ol className="flex flex-col gap-4">

@@ -7,13 +7,45 @@
 //   FAKE_BADJSON   print something that is not JSON, twice
 //   FAKE_NOTJOB    say the page is not a job posting
 //   FAKE_INVENT    reword a bullet with a number the bank does not contain
-import { readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const args = process.argv.slice(2);
 
-// "claude auth status": signed in.
-if (args[0] === "auth") process.exit(0);
+// Signing in. Without FAKE_CLAUDE_HOME the tool is always signed in. With it,
+// it is signed in only after "auth login" was given the code "good-code".
+const home = process.env.FAKE_CLAUDE_HOME;
+const marker = home ? path.join(home, "signed-in") : null;
+if (args[0] === "auth") {
+  if (!marker) process.exit(0);
+  if (args[1] === "status") process.exit(existsSync(marker) ? 0 : 1);
+  if (args[1] === "logout") {
+    rmSync(marker, { force: true });
+    process.exit(0);
+  }
+  if (args[1] === "login") {
+    process.stdout.write("Opening browser to sign in…\nIf the browser didn't open, visit: https://claude.example/oauth/authorize?code=true&client_id=fake\nPaste code here if prompted > ");
+    let typed = "";
+    process.stdin.setEncoding("utf8");
+    for await (const chunk of process.stdin) {
+      typed += chunk;
+      if (typed.includes("\n")) break;
+    }
+    if (typed.trim() === "good-code") {
+      mkdirSync(home, { recursive: true });
+      writeFileSync(marker, "yes");
+      process.stdout.write("\nLogin successful.\n");
+      process.exit(0);
+    }
+    process.stderr.write("\nInvalid code. Login failed.\n");
+    process.exit(1);
+  }
+  process.exit(0);
+}
+if (marker && !existsSync(marker)) {
+  process.stderr.write("Not logged in. Please run /login\n");
+  process.exit(1);
+}
 
 let prompt = "";
 process.stdin.setEncoding("utf8");
