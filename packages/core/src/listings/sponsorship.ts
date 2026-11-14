@@ -1,3 +1,5 @@
+import { findPlaces } from "./places.js";
+
 /**
  * What a posting says about visas and relocation. Only explicit statements
  * count, and the sentence that decided it is kept so the reader can check.
@@ -9,6 +11,11 @@ export type Sponsorship = {
   relocation: "offered" | "unknown";
   /** The sentence behind the visa answer, or behind relocation when visa is unknown. */
   evidence: string | null;
+  /**
+   * Country codes the offer names, as in "we can sponsor visas to Germany".
+   * Empty when the offer names no country, which is not the same as every country.
+   */
+  countries: string[];
 };
 
 const SPONSOR = /sponsor(ship|ed|ing|s)?\b/i;
@@ -50,25 +57,39 @@ function clip(s: string): string {
   return s.length > 240 ? `${s.slice(0, 237)}...` : s;
 }
 
+/**
+ * The countries named in the part of the sentence that makes the offer. The
+ * sentence is cut at "; " and at "but", so "we sponsor visas to Germany; for
+ * any other country you need the right to work" names Germany and nothing else.
+ */
+function offerCountries(sentence: string): string[] {
+  const clauses = sentence.split(/;|\bbut\b|\bhowever\b|\botherwise\b/i);
+  const clause = clauses.find((c) => OFFERED.some((re) => re.test(c)));
+  return clause ? findPlaces(clause).countries : [];
+}
+
 export function sponsorship(description: string): Sponsorship {
   let visa: Sponsorship["visa"] = "unknown";
   let relocation: Sponsorship["relocation"] = "unknown";
   let visaEvidence: string | null = null;
   let relocationEvidence: string | null = null;
+  let countries: string[] = [];
 
   for (const s of sentences(description)) {
     // A refusal anywhere outranks an offer: postings that sponsor do not also say they cannot.
     if (visa !== "refused" && REFUSED.some((re) => re.test(s))) {
       visa = "refused";
       visaEvidence = clip(s);
+      countries = [];
     } else if (visa === "unknown" && (SPONSOR.test(s) || /\b(visa|work permit|blue card|immigration|h-?1b|tier 2)\b/i.test(s)) && OFFERED.some((re) => re.test(s))) {
       visa = "offered";
       visaEvidence = clip(s);
+      countries = offerCountries(s);
     }
     if (relocation === "unknown" && RELOCATION.some((re) => re.test(s)) && !NO_RELOCATION.test(s)) {
       relocation = "offered";
       relocationEvidence = clip(s);
     }
   }
-  return { visa, relocation, evidence: visaEvidence ?? relocationEvidence };
+  return { visa, relocation, evidence: visaEvidence ?? relocationEvidence, countries };
 }

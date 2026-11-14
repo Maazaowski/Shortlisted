@@ -197,7 +197,7 @@ describe("sponsorship", () => {
   });
 
   it("says unknown when the posting is silent", () => {
-    expect(sponsorship("Build APIs with us. Great team.")).toEqual({ visa: "unknown", relocation: "unknown", evidence: null });
+    expect(sponsorship("Build APIs with us. Great team.")).toEqual({ visa: "unknown", relocation: "unknown", evidence: null, countries: [] });
   });
 
   it("a refusal outranks an offer elsewhere in the text", () => {
@@ -328,5 +328,29 @@ describe("wordings found by the end-to-end fixtures", () => {
     const scope = remoteScope("Remote", "A fully remote role open worldwide. You will keep our services running.", {});
     expect(scope.allowed).toEqual(["WORLD"]);
     expect(scope.confidence).toBe("likely");
+  });
+});
+
+describe("sponsorship for a named country", () => {
+  it("keeps the country an offer is limited to", () => {
+    const s = sponsorship("We can sponsor visas to Germany; for any other country, you need to have existing right to work.");
+    expect(s.visa).toBe("offered");
+    expect(s.countries).toEqual(["DE"]);
+  });
+
+  it("ignores countries named after a but", () => {
+    const s = sponsorship("We offer visa sponsorship for the Netherlands, but not for roles in the United States.");
+    expect(s.countries).toEqual(["NL"]);
+  });
+
+  it("names no country when the offer names none", () => {
+    expect(sponsorship("Visa sponsorship is available for the right candidate.").countries).toEqual([]);
+  });
+
+  it("does not file a role under relocate when the offer is for another country", () => {
+    const remote = { mode: "onsite" as const, allowed: [], excluded: [], countries: ["FR"], confidence: "stated" as const, evidence: "Paris, France" };
+    const offer = { visa: "offered" as const, relocation: "unknown" as const, evidence: "We can sponsor visas to Germany.", countries: ["DE"] };
+    expect(feedFamilies({ remote, sponsorship: offer, licensedSponsor: [] })).not.toContain("relocate");
+    expect(feedFamilies({ remote: { ...remote, countries: ["DE"] }, sponsorship: offer, licensedSponsor: [] })).toContain("relocate");
   });
 });
