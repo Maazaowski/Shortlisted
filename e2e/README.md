@@ -61,3 +61,9 @@ node e2e/walkthrough/join.mjs <path to a full ffmpeg> docs/video/shortlisted-wal
 ```
 
 `WT_SPEED=0.05` makes a one minute dry run for checking the script. The ffmpeg that ships with Playwright can only record, so the join needs a full build. After changing a page, update the captions and locators in the tour the same way as the tests.
+
+### The release walkthrough
+
+`walkthrough/release-tour.mjs` records how a release reaches a user: tagging, the GitHub pages, a fresh install of the published image, the update notice and the update. The browser parts are live. The terminal parts replay output saved from the real commands by `walkthrough/capture.mjs`, shown in `walkthrough/terminal.html`.
+
+Run the fresh install in its own folder with `COMPOSE_PROJECT_NAME` set to something other than `shortlisted`, and stop your own `db` container first. The compose file fixes both the project name and the database port, so a second copy on the same computer otherwise becomes the same installation as yours.
