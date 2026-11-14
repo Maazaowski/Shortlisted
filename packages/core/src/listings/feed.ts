@@ -32,6 +32,8 @@ const SponsorshipSchema = z.object({
   visa: z.enum(["offered", "refused", "unknown"]),
   relocation: z.enum(["offered", "unknown"]),
   evidence: z.string().nullable(),
+  /** Countries the visa offer names. Added after version 1 shipped, so older feeds lack it. */
+  countries: z.array(z.string()).default([]),
 });
 
 export const FeedListingSchema = z.object({
@@ -101,7 +103,10 @@ export function feedFamilies(listing: Pick<FeedListing, "remote" | "sponsorship"
   if (remote.mode === "remote") out.push("remote");
   const abroad = remote.mode !== "remote";
   const sponsorOnRegister = remote.countries.some((c) => listing.licensedSponsor.includes(c));
-  if (s.visa !== "refused" && (s.visa === "offered" || s.relocation === "offered" || (abroad && sponsorOnRegister))) out.push("relocate");
+  // "We sponsor visas to Germany" on a role in another country is not an offer for this role.
+  const named = s.countries ?? [];
+  const visaHere = s.visa === "offered" && (named.length === 0 || remote.countries.length === 0 || remote.countries.some((c) => named.includes(c)));
+  if (s.visa !== "refused" && (visaHere || s.relocation === "offered" || (abroad && sponsorOnRegister))) out.push("relocate");
   if (abroad && remote.countries.some((c) => GULF.has(c))) out.push("gulf");
   return out;
 }

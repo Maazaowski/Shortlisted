@@ -244,7 +244,16 @@ export function eligibilityTags(l: Pick<ListingRow, "mode" | "remote" | "admits"
     tags.push({ text: `${l.mode === "hybrid" ? "Hybrid" : "Office"} in ${l.countries.map(countryName).join(", ")}`, tone: "plain", evidence: null });
   }
 
-  if (sponsor.visa === "offered") tags.push({ text: "Visa sponsorship stated", tone: "good", evidence: sponsor.evidence });
+  if (sponsor.visa === "offered") {
+    // Listings synced before the feed carried the countries have none.
+    const named = sponsor.countries ?? [];
+    const elsewhere = named.length > 0 && l.countries.length > 0 && !l.countries.some((c) => named.includes(c));
+    tags.push({
+      text: named.length ? `Visa sponsorship stated, for ${named.map(countryName).join(", ")} only` : "Visa sponsorship stated",
+      tone: elsewhere ? "warn" : "good",
+      evidence: sponsor.evidence,
+    });
+  }
   if (sponsor.visa === "refused") tags.push({ text: "No visa sponsorship", tone: "plain", evidence: sponsor.evidence });
   if (sponsor.relocation === "offered") tags.push({ text: "Relocation support stated", tone: "good", evidence: sponsor.visa === "unknown" ? sponsor.evidence : null });
   if (sponsor.visa === "unknown" && l.licensedSponsor.some((c) => l.countries.includes(c))) {

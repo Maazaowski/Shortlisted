@@ -91,7 +91,10 @@ test.describe("finding jobs", () => {
     await page.goto("/jobs");
     await page.getByRole("navigation", { name: "Pools" }).getByRole("link", { name: "Relocate" }).click();
     await expect(rows(page)).toHaveCount(2);
-    await expect(row(page, "Platform Engineer")).toContainText("Visa sponsorship stated");
+    // The offer names a country, so the tag says which one.
+    await expect(row(page, "Platform Engineer")).toContainText("Visa sponsorship stated, for Germany only");
+    await expect(row(page, "Software Engineer Najd")).toContainText("Visa sponsorship stated");
+    await expect(row(page, "Software Engineer Najd")).not.toContainText("only");
     await expect(row(page, "Platform Engineer")).toContainText("Relocation support stated");
     await expect(row(page, "Software Engineer Najd")).toContainText("Office in Saudi Arabia");
     // The London role that refuses sponsorship never reaches the list.
