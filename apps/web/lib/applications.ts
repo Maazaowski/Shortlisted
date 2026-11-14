@@ -234,7 +234,8 @@ export async function saveCoverLetter(userId: string, id: string, text: string):
   );
 }
 
-export async function regenerate(userId: string, id: string, note?: string | null): Promise<void> {
+/** `force` tailors even when the fit is poor. The user asked for it on the page that says so. */
+export async function regenerate(userId: string, id: string, note?: string | null, force = false): Promise<void> {
   const manual = provider() === "manual";
   await withUser(userId, (tx) =>
     tx.application.update({
@@ -242,7 +243,7 @@ export async function regenerate(userId: string, id: string, note?: string | nul
       data: { generationStatus: manual ? "WAITING" : "QUEUED", generationError: null, regenerateNote: note ?? null, pendingSelection: Prisma.DbNull },
     }),
   );
-  if (!manual) await enqueueGeneration({ applicationId: id, userId, note });
+  if (!manual) await enqueueGeneration({ applicationId: id, userId, note, force });
 }
 
 // ---------------------------------------------------------------------------

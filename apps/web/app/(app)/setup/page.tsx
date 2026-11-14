@@ -2,9 +2,9 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { ArrowRight, Check, Circle } from "lucide-react";
 import { requireUser } from "@/lib/session";
-import { IN_DOCKER, setupStatus, type ModelStatus } from "@/lib/setup";
+import { setupStatus } from "@/lib/setup";
 import { RELEASES_URL } from "@/lib/version";
-import { TestModelButton } from "@/components/test-model-button";
+import { ModelChoice } from "@/components/model-choice";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +40,7 @@ export default async function SetupPage() {
           ready={status.model.ready}
           title="A model to do the writing"
         >
-          <ModelStep model={status.model} />
+          <ModelChoice {...status.choice} />
         </Step>
 
         <Step n={2} ready={status.bank.ready} title="Your resume">
@@ -175,94 +175,5 @@ function Step({
         </div>
       </div>
     </li>
-  );
-}
-
-function Command({ children }: { children: string }) {
-  return (
-    <code className="num mt-2 block overflow-x-auto rounded-[var(--radius-sm)] border border-hair bg-surface px-3 py-2 text-[12.5px] text-ink">
-      {children}
-    </code>
-  );
-}
-
-function ModelStep({ model }: { model: ModelStatus }) {
-  if (model.provider === "manual") {
-    return (
-      <>
-        <p>
-          Paste mode. Each capture gives you a prompt to paste into Claude or
-          ChatGPT, and you paste the reply back. It works with no further setup.
-        </p>
-        <p className="mt-2">
-          To skip the pasting and use your Claude or ChatGPT subscription
-          directly, set this in the <span className="num">.env</span> file in
-          the Shortlisted folder, then restart.
-        </p>
-        <Command>SHORTLISTED_PROVIDER=claude-cli</Command>
-        <p className="mt-2 text-[13px] text-ink-3">
-          Use <span className="num">codex-cli</span> for ChatGPT. Restart with{" "}
-          <span className="num">
-            {IN_DOCKER ? "docker compose up -d" : "pnpm web and pnpm worker"}
-          </span>
-          .
-        </p>
-      </>
-    );
-  }
-  if (model.provider === "anthropic") {
-    return model.ready ? (
-      <>
-        <p>
-          An API key is set. Captures run by themselves and are billed per
-          token.
-        </p>
-        <div className="mt-3">
-          <TestModelButton />
-        </div>
-      </>
-    ) : (
-      <p>
-        The provider is set to the Anthropic API but no key is set. Add{" "}
-        <span className="num">ANTHROPIC_API_KEY</span> to the{" "}
-        <span className="num">.env</span> file and restart.
-      </p>
-    );
-  }
-  if (!model.installed) {
-    return (
-      <p>
-        {model.label} is chosen but is not installed where Shortlisted runs.{" "}
-        {IN_DOCKER
-          ? "Update to the latest version with docker compose pull, then docker compose up -d."
-          : "Install it, or run Shortlisted with Docker, which includes it."}
-      </p>
-    );
-  }
-  if (!model.ready) {
-    return (
-      <>
-        <p>
-          {model.label} is not signed in. Open a terminal in the Shortlisted
-          folder and run this. It prints a link. Open the link, sign in, and
-          paste the code back into the terminal.
-        </p>
-        <Command>{model.signInCommand}</Command>
-        <p className="mt-2 text-[13px] text-ink-3">
-          The sign-in stays on this machine. Refresh this page when it is done.
-        </p>
-      </>
-    );
-  }
-  return (
-    <>
-      <p>
-        {model.label} is signed in. Captures run by themselves on your own
-        subscription.
-      </p>
-      <div className="mt-3">
-        <TestModelButton />
-      </div>
-    </>
   );
 }

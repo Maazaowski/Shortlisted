@@ -8,5 +8,5 @@
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "allowJs": false
   },
-  "include": ["*.ts", "tests/**/*.ts", "walkthrough/**/*.ts"]
+  "include": ["*.ts", "tests/**/*.ts", "walkthrough/**/*.ts", "real/**/*.ts"]
 }

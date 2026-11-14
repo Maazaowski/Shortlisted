@@ -72,6 +72,28 @@ describe("validateSelection", () => {
     expect(r.selection.entries[0]!.bullets[0]!.rewording).toContain("Reduced");
   });
 
+  it("does not flag a word that a moved clause puts at the end of the sentence", () => {
+    // Found on a live run: reordering made "PyMuPDF" and "Postgres" the last word, and the full stop was read as part of a new term.
+    const r = validateSelection(
+      bank,
+      sel([
+        {
+          entryId: "e1",
+          bullets: [
+            { id: "b1", rewording: "Cut invoice extraction time by 40% using fingerprints from PyMuPDF." },
+            { id: "b2", rewording: "Built a double-entry ledger in Postgres." },
+          ],
+        },
+      ]),
+    );
+    expect(r.flags).toEqual([]);
+  });
+
+  it("still flags a new tool at the end of the sentence, without the full stop", () => {
+    const r = validateSelection(bank, sel([{ entryId: "e1", bullets: [{ id: "b2", rewording: "Built a double-entry ledger in Postgres on Kubernetes." }] }]));
+    expect(r.flags.map((f) => f.detail)).toEqual(['"kubernetes" does not appear in the original bullet.']);
+  });
+
   it("flags summary numbers that appear nowhere in the bank", () => {
     const r = validateSelection(bank, sel([{ entryId: "e1", bullets: [{ id: "b1", rewording: null }] }], "Served 500 clients."));
     expect(r.flags.map((f) => f.kind)).toContain("summary_number");

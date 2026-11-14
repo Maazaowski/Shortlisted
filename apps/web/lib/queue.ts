@@ -22,7 +22,7 @@ async function boss(): Promise<PgBoss> {
   return g.shortlistedBoss;
 }
 
-export async function enqueueGeneration(data: { applicationId: string; userId: string; note?: string | null }): Promise<void> {
+export async function enqueueGeneration(data: { applicationId: string; userId: string; note?: string | null; force?: boolean }): Promise<void> {
   const b = await boss();
   await b.send(GENERATE_QUEUE, data, { retryLimit: 1, retryDelay: 15, expireInSeconds: 600 });
 }

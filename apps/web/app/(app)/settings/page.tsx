@@ -3,6 +3,8 @@ import { CAREER_FIELDS, COUNTRIES, POOLS } from "@shortlisted/core";
 import { requireUser } from "@/lib/session";
 import { getPreferences } from "@/lib/preferences";
 import { newerRelease, VERSION } from "@/lib/version";
+import { setupStatus } from "@/lib/setup";
+import { ModelChoice } from "@/components/model-choice";
 import { savePreferencesAction } from "@/app/actions/settings";
 
 export const dynamic = "force-dynamic";
@@ -13,10 +15,11 @@ export default async function SettingsPage({
   searchParams: Promise<{ saved?: string; error?: string; next?: string }>;
 }) {
   const user = await requireUser();
-  const [{ prefs }, query, update] = await Promise.all([
+  const [{ prefs }, query, update, status] = await Promise.all([
     getPreferences(user.id),
     searchParams,
     newerRelease(),
+    setupStatus(user.id),
   ]);
 
   return (
@@ -215,6 +218,14 @@ export default async function SettingsPage({
           </span>
         </div>
       </form>
+
+      <section className="border-t border-hair pt-6" id="model">
+        <h2 className="label">How the writing is done</h2>
+        <p className="hint mb-3">Change this any time. It takes effect straight away.</p>
+        <div className="text-[14px] leading-relaxed text-ink-2">
+          <ModelChoice {...status.choice} />
+        </div>
+      </section>
 
       <section className="border-t border-hair pt-6">
         <h2 className="label">Your data</h2>

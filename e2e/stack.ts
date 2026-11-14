@@ -74,7 +74,9 @@ function stack(name: StackName, port: number, extra: Record<string, string>): St
 }
 
 export const STACKS: Record<StackName, Stack> = {
-  manual: stack("manual", Number(process.env.E2E_MANUAL_PORT) || 3041, { SHORTLISTED_PROVIDER: "manual" }),
+  // Paste mode by the environment. The stand-in tool is still reachable and starts signed out,
+  // so the tests can choose a plan and sign in from inside the app.
+  manual: stack("manual", Number(process.env.E2E_MANUAL_PORT) || 3041, { SHORTLISTED_PROVIDER: "manual", CLAUDE_BIN: FAKE_CLI, FAKE_CLAUDE_HOME: path.join(TMP, "manual", "claude-home") }),
   cli: stack("cli", Number(process.env.E2E_CLI_PORT) || 3042, {
     SHORTLISTED_PROVIDER: "claude-cli",
     CLAUDE_BIN: FAKE_CLI,

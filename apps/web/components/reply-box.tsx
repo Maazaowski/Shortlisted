@@ -52,7 +52,11 @@ export function ReplyBox({ applicationId, onDone }: { applicationId: string; onD
     <section className="card">
       <h2 className="label">Your turn</h2>
       <p className="mt-1 text-[13px] text-ink-2">
-        No API key is set, so the model runs through you. Copy the prompt, paste it into Claude, then paste the reply below. About a minute.
+        Shortlisted is in paste mode, which is free and needs no sign-in. Copy the prompt, paste it into Claude or ChatGPT, then paste the reply below. About a minute. To have this happen by itself on your Claude or ChatGPT plan, see{" "}
+        <a href="/settings#model" className="underline">
+          Settings
+        </a>
+        .
       </p>
       <ol className="mt-4 flex flex-col gap-4">
         <li className="flex flex-wrap items-center gap-2">

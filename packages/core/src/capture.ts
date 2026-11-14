@@ -52,6 +52,8 @@ export function stripHtml(html: string): string {
 }
 
 const MAX_TEXT = 30_000;
+/** A structured description shorter than this is treated as a teaser, not the posting. */
+const THIN_DESCRIPTION = 1200;
 
 /**
  * Turns what the extension scraped into the text the parser sees. JSON-LD wins
@@ -72,7 +74,10 @@ export function normalizeCapture(capture: Capture): NormalizedCapture {
     const company = typeof ld.hiringOrganization === "string" ? ld.hiringOrganization : ld.hiringOrganization?.name ?? null;
     const title = ld.title ?? null;
     const body = stripHtml(ld.description);
-    const rawText = [title ? `Title: ${title}` : "", company ? `Company: ${company}` : "", "", body].filter(Boolean).join("\n").slice(0, MAX_TEXT);
+    // Some sites put one sentence in the structured description and the requirements in the page. Then the page text goes along too.
+    const page = capture.text.replace(/\r/g, "").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+    const thin = body.length < THIN_DESCRIPTION && page.length > body.length * 2;
+    const rawText = [title ? `Title: ${title}` : "", company ? `Company: ${company}` : "", "", body, thin ? `\nThe page itself says:\n${page}` : ""].filter(Boolean).join("\n").slice(0, MAX_TEXT);
     return { rawText, title, company, sourceHost, contentHash: hashText(rawText), fromJsonLd: true };
   }
 

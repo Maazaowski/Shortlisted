@@ -285,13 +285,15 @@ export function ApplicationLive({ initial, fullName }: { initial: ApplicationVie
           )}
         </section>
 
-        {!generating && !app.needsReply && (
+        {!generating && (
           <section className="enter border-t border-hair pt-6" style={{ "--i": 7 } as React.CSSProperties}>
-            <h2 className="label">{app.generationStatus === "SKIPPED" ? "Try again" : "Regenerate"}</h2>
+            <h2 className="label">{app.needsReply ? "Start again" : app.generationStatus === "SKIPPED" ? "Try again" : "Regenerate"}</h2>
             <p className="hint">
-              {app.generationStatus === "SKIPPED"
-                ? "After you add a missing skill to your bank, this scores the posting again and tailors it if the fit is no longer poor."
-                : "Same posting, a fresh selection. Add an instruction if you want it steered."}
+              {app.needsReply
+                ? "If you have connected your Claude or ChatGPT plan since this was saved, this tailors it without pasting. In paste mode it adds your instruction to the prompt."
+                : app.generationStatus === "SKIPPED"
+                  ? "After you add a missing skill to your bank, Regenerate scores the posting again and tailors it if the fit is no longer poor."
+                  : "Same posting, a fresh selection. Add an instruction if you want it steered."}
             </p>
             <div className="mt-3 flex flex-col gap-2 sm:flex-row">
               <input className="field" placeholder="e.g. lead with the ledger work" value={regenNote} onChange={(e) => setRegenNote(e.target.value)} aria-label="Regenerate instruction" />
@@ -299,6 +301,14 @@ export function ApplicationLive({ initial, fullName }: { initial: ApplicationVie
                 {busy ? <Loader2 size={13} className="spin" /> : <RefreshCw size={13} strokeWidth={1.75} />} Regenerate
               </button>
             </div>
+            {app.generationStatus === "SKIPPED" && (
+              <div className="mt-4 flex flex-col items-start gap-2">
+                <p className="hint">The score is a rough count of named skills. If you want to apply regardless, this tailors it from what your bank does have. The missing skills are not added.</p>
+                <button className="btn btn-primary" disabled={busy} onClick={() => post("/regenerate", { note: regenNote || null, force: true })}>
+                  Tailor anyway
+                </button>
+              </div>
+            )}
           </section>
         )}
       </div>

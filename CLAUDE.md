@@ -118,6 +118,18 @@ for amd64 and arm64 with `SHORTLISTED_VERSION` set to the tag, pushes it to GHCR
 compares `SHORTLISTED_VERSION` with the latest release (cached six hours, off with
 `SHORTLISTED_UPDATE_CHECK=off`, never for a `dev` build) and Settings shows the update commands.
 
+**Model choice in the app.** Nobody has to edit `.env` to pick a provider. `ModelChoice`
+(`apps/web/components/model-choice.tsx`), on `/setup` and `/settings`, saves the choice to
+`Preferences.provider`; `setProviderChoice()` in `packages/core/src/provider.ts` makes
+`provider()` return it ahead of the environment. The web app loads it on every request through
+`requireUser()` and `resolveUserId()` (`apps/web/lib/provider-choice.ts`), and the worker at the
+start of each job, so a change needs no restart. Signing in to Claude Code or Codex also happens
+on the page: `apps/web/lib/cli-login.ts` starts the tool's own sign-in as a child process, shows
+the link it prints, writes the pasted code to its stdin (Claude Code) or waits for it to finish
+(Codex device code), and holds one session per process. The app never sees a password. The API
+key option is only offered when `ANTHROPIC_API_KEY` is set. In the e2e suite the stand-in tool
+signs in with the code `good-code` when `FAKE_CLAUDE_HOME` is set.
+
 **Setup checklist.** `/setup` reads real state through `setupStatus()` in `apps/web/lib/setup.ts`:
 the provider and, for a CLI provider, `cliStatus()` (an exit code, no model call); whether a
 profile exists; whether the settings form was saved (`Preferences.savedAt`); and whether the
@@ -348,7 +360,22 @@ Check `stop_reason === "refusal"` before reading output (`ModelRefusedError`).
 
 ## Status
 
-Verified on 13 Nov 2026 by `pnpm e2e` (108 tests) and `pnpm test` (213): paste mode end to end
+Verified on 14 Nov 2026 with a real signed-in Claude Code (`e2e/real/real-model.spec.ts`, run
+twice from an empty install, about three minutes each): choosing the plan in the app, the test
+call, resume import, key requirements on a live listing, tailoring from a listing and from a
+pasted posting, regenerate, a poor fit and "Tailor anyway", a page that is not a job, and the
+extension. Releases v0.3.0 and v0.3.1, a fresh install from the published image, the update
+notice and the update were also run for real. Still not verified: Codex, the anthropic provider,
+the setup script on a Mac, and the extension on live job sites.
+
+Fit scoring changed after that run showed real postings all scoring POOR: `skillCovered()` in
+`skills.ts` splits compound bank skills (`expandSkill`), matches general terms to concrete ones
+(`FAMILIES`), and treats "a or b" as any-of; the parse prompt caps must-haves at twelve concrete
+requirements; a posting with no must-haves is POSSIBLE, not STRONG; and a POOR fit can be
+tailored anyway (`force` on the regenerate route and the queue job). None of this touches the
+validator, which still decides what may appear on a resume.
+
+Verified on 13 Nov 2026 by `pnpm e2e` (now 117 tests) and `pnpm test` (now 255): paste mode end to end
 from an empty install, the automatic path against the stand-in tool, the extension (capture,
 reply, Attach, stage change), jobs pools and filters against a fixture feed, the tracker
 additions, export, and the Docker image build. Still not verified: a real signed-in Claude Code

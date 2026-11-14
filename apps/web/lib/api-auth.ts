@@ -1,11 +1,13 @@
 import "server-only";
 import { LOCAL_USER_ID } from "@shortlisted/db";
+import { applyProviderChoice } from "./provider-choice";
 
 /**
  * Resolves the caller for /api routes. There is one user and no auth, so
  * this is a constant. The web app binds to loopback; that is the boundary.
  */
 export async function resolveUserId(_req: Request): Promise<string> {
+  await applyProviderChoice(LOCAL_USER_ID);
   return LOCAL_USER_ID;
 }
 
