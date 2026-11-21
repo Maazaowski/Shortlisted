@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "builtAt": "2026-11-21T11:08:04.447Z",
+  "counts": {
+    "listings": 5691,
+    "companies": 79,
+    "fields": 16
+  },
+  "files": [
+    {
+      "family": "remote",
+      "name": "remote.ndjson.gz",
+      "listings": 4066
+    },
+    {
+      "family": "relocate",
+      "name": "relocate.ndjson.gz",
+      "listings": 1667
+    },
+    {
+      "family": "gulf",
+      "name": "gulf.ndjson.gz",
+      "listings": 112
+    }
+  ],
+  "attribution": [
+    {
+      "source": "uk-sponsor-register",
+      "name": "Register of licensed sponsors: workers, Home Office. Contains public sector information licensed under the Open Government Licence v3.0.",
+      "url": "https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers"
+    }
+  ]
+}
