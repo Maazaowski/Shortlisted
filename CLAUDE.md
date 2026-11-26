@@ -143,8 +143,8 @@ and the pools live in `packages/core/src/preferences.ts`. Read through `getPrefe
 
 **Job feed.** Listings come from one shared feed, not from each install. `packages/feed` reads
 `companies.yaml` (one company board per line), fetches each board through an adapter in
-`src/sources/index.ts` (Greenhouse, Lever, Ashby, Workable, Recruitee; public keyless JSON, links
-to the employer's own posting), classifies every job with the pure functions in
+`src/sources/index.ts` (Greenhouse, Lever, Ashby, Workable, Recruitee, SmartRecruiters, Personio;
+public keyless JSON, or XML for Personio, links to the employer's own posting), classifies every job with the pure functions in
 `packages/core/src/listings/` and writes `remote`, `relocate` and `gulf` `.ndjson.gz` files plus
 `meta.json`. `.github/workflows/feed.yml` runs it daily and force-pushes one commit to the `feed`
 branch. `FeedListingSchema` in `listings/feed.ts` is the contract between the builder and the

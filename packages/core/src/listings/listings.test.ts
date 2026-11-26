@@ -190,6 +190,8 @@ describe("sponsorship", () => {
     "Applicants must already have the right to work in the UK.",
     "We cannot provide visa sponsorship at this time.",
     "Candidates must be authorized to work without the need for current or future sponsorship.",
+    "Candidates must be currently authorized to work in the United States on a full-time basis without the need for employer visa sponsorship.",
+    "As a result, visa sponsorship and relocation support are not available for this position.",
   ])("refused: %s", (sentence) => {
     const s = sponsorship(`About the role. ${sentence} Apply now.`);
     expect(s.visa).toBe("refused");
@@ -198,6 +200,25 @@ describe("sponsorship", () => {
 
   it("says unknown when the posting is silent", () => {
     expect(sponsorship("Build APIs with us. Great team.")).toEqual({ visa: "unknown", relocation: "unknown", evidence: null, countries: [] });
+  });
+
+  it("reads a refusal whose negation is far from the word sponsorship", () => {
+    const s = sponsorship(
+      "For US based roles only, please note the Company may not be able to employ candidates for this role who have United States work authorization related to certain U.S. visa categories, or support future H-1B sponsorship at this time.",
+    );
+    expect(s.visa).toBe("refused");
+  });
+
+  it.each([
+    "To help make a change, we sponsor bright women from disadvantaged backgrounds through their university degrees in science and mathematics.",
+    "We sponsor meetups and open source projects.",
+    "Tier 2 support for any escalated client issues related to financial instruments.",
+  ])("not about visas: %s", (sentence) => {
+    expect(sponsorship(sentence).visa).toBe("unknown");
+  });
+
+  it("still reads a tier 2 visa offer", () => {
+    expect(sponsorship("Tier 2 sponsorship is available for this role.").visa).toBe("offered");
   });
 
   it("a refusal outranks an offer elsewhere in the text", () => {

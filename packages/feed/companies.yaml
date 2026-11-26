@@ -3,9 +3,12 @@
 # One company per line:
 #   - { ats: greenhouse, board: gitlab, name: GitLab }
 #
-#   ats    the job board system: greenhouse, lever, ashby, workable or recruitee
+#   ats    the job board system: greenhouse, lever, ashby, workable, recruitee,
+#          smartrecruiters or personio
 #   board  the company's id on that system, the part of its jobs page address
-#          that names the company (boards.greenhouse.io/gitlab -> gitlab)
+#          that names the company (boards.greenhouse.io/gitlab -> gitlab,
+#          jobs.smartrecruiters.com/BoschGroup -> BoschGroup,
+#          tado.jobs.personio.de -> tado)
 #   name   the company's name as people know it. For UK roles it is also
 #          compared with the register of licensed visa sponsors.
 #
@@ -97,6 +100,204 @@
 - { ats: ashby, board: n8n, name: n8n }
 - { ats: ashby, board: lovable, name: Lovable }
 - { ats: ashby, board: airwallex, name: Airwallex }
+- { ats: greenhouse, board: abnormalsecurity, name: Abnormal Security }
+- { ats: greenhouse, board: agoda, name: Agoda }
+- { ats: greenhouse, board: algolia, name: Algolia }
+- { ats: greenhouse, board: aptoslabs, name: Aptos Labs }
+- { ats: greenhouse, board: asana, name: Asana }
+- { ats: greenhouse, board: assemblyai, name: AssemblyAI }
+- { ats: greenhouse, board: bitgo, name: BitGo }
+- { ats: greenhouse, board: bitpanda, name: Bitpanda }
+- { ats: greenhouse, board: bitwarden, name: Bitwarden }
+- { ats: greenhouse, board: blockchain, name: Blockchain.com }
+- { ats: greenhouse, board: braze, name: Braze }
+- { ats: greenhouse, board: calendly, name: Calendly }
+- { ats: greenhouse, board: catawiki, name: Catawiki }
+- { ats: greenhouse, board: chainguard, name: Chainguard }
+- { ats: greenhouse, board: checkr, name: Checkr }
+- { ats: greenhouse, board: coalition, name: Coalition }
+- { ats: greenhouse, board: coursera, name: Coursera }
+- { ats: greenhouse, board: cribl, name: Cribl }
+- { ats: greenhouse, board: customerio, name: Customer.io }
+- { ats: greenhouse, board: descript, name: Descript }
+- { ats: greenhouse, board: digitalocean98, name: DigitalOcean }
+- { ats: greenhouse, board: doordashusa, name: DoorDash }
+- { ats: greenhouse, board: fanduel, name: FanDuel }
+- { ats: greenhouse, board: fastly, name: Fastly }
+- { ats: greenhouse, board: feedzai, name: Feedzai }
+- { ats: greenhouse, board: fireblocks, name: Fireblocks }
+- { ats: greenhouse, board: flexport, name: Flexport }
+- { ats: greenhouse, board: form3, name: Form3 }
+- { ats: greenhouse, board: gemini, name: Gemini }
+- { ats: greenhouse, board: gleanwork, name: Glean }
+- { ats: greenhouse, board: helsing, name: Helsing }
+- { ats: greenhouse, board: heygen, name: HeyGen }
+- { ats: greenhouse, board: honeycomb, name: Honeycomb }
+- { ats: greenhouse, board: hubspotjobs, name: HubSpot }
+- { ats: greenhouse, board: huntress, name: Huntress }
+- { ats: greenhouse, board: intercom, name: Intercom }
+- { ats: greenhouse, board: jetbrains, name: JetBrains }
+- { ats: greenhouse, board: jfrog, name: JFrog }
+- { ats: greenhouse, board: justworks, name: Justworks }
+- { ats: greenhouse, board: khanacademy, name: Khan Academy }
+- { ats: greenhouse, board: later, name: Later }
+- { ats: greenhouse, board: lattice, name: Lattice }
+- { ats: greenhouse, board: launchdarkly, name: LaunchDarkly }
+- { ats: greenhouse, board: lyft, name: Lyft }
+- { ats: greenhouse, board: mattermost, name: Mattermost }
+- { ats: greenhouse, board: mercury, name: Mercury }
+- { ats: greenhouse, board: realtimeboardglobal, name: Miro }
+- { ats: greenhouse, board: mixpanel, name: Mixpanel }
+- { ats: greenhouse, board: gomotive, name: Motive }
+- { ats: greenhouse, board: neo4j, name: Neo4j }
+- { ats: greenhouse, board: newrelic, name: New Relic }
+- { ats: greenhouse, board: okx, name: OKX }
+- { ats: greenhouse, board: oura, name: Oura }
+- { ats: greenhouse, board: payoneer, name: Payoneer }
+- { ats: greenhouse, board: paypay, name: PayPay }
+- { ats: greenhouse, board: physicsx, name: PhysicsX }
+- { ats: greenhouse, board: pinterest, name: Pinterest }
+- { ats: greenhouse, board: proton, name: Proton }
+- { ats: greenhouse, board: raisin, name: Raisin }
+- { ats: greenhouse, board: riotgames, name: Riot Games }
+- { ats: greenhouse, board: ripple, name: Ripple }
+- { ats: greenhouse, board: riskified, name: Riskified }
+- { ats: greenhouse, board: roblox, name: Roblox }
+- { ats: greenhouse, board: scandit, name: Scandit }
+- { ats: greenhouse, board: singlestore, name: SingleStore }
+- { ats: greenhouse, board: smartsheet, name: Smartsheet }
+- { ats: greenhouse, board: staffbase, name: Staffbase }
+- { ats: greenhouse, board: storyblok, name: Storyblok }
+- { ats: greenhouse, board: sumologic, name: Sumo Logic }
+- { ats: greenhouse, board: swordhealth, name: Sword Health }
+- { ats: greenhouse, board: tailscale, name: Tailscale }
+- { ats: greenhouse, board: tide, name: Tide }
+- { ats: greenhouse, board: tines, name: Tines }
+- { ats: greenhouse, board: toast, name: Toast }
+- { ats: greenhouse, board: togetherai, name: Together AI }
+- { ats: greenhouse, board: turing, name: Turing }
+- { ats: greenhouse, board: twitch, name: Twitch }
+- { ats: greenhouse, board: veriff, name: Veriff }
+- { ats: greenhouse, board: wizinc, name: Wiz }
+- { ats: greenhouse, board: wolt, name: Wolt }
+- { ats: greenhouse, board: wrike, name: Wrike }
+- { ats: greenhouse, board: yugabyte, name: Yugabyte }
+- { ats: lever, board: anchorage, name: Anchorage Digital }
+- { ats: lever, board: articulate, name: Articulate }
+- { ats: lever, board: brilliant, name: Brilliant }
+- { ats: lever, board: contentsquare, name: Contentsquare }
+- { ats: lever, board: deliverect, name: Deliverect }
+- { ats: lever, board: fly, name: Fly.io }
+- { ats: lever, board: metabase, name: Metabase }
+- { ats: lever, board: moonpay, name: MoonPay }
+- { ats: lever, board: offchainlabs, name: Offchain Labs }
+- { ats: ashby, board: secureframe, name: Secureframe }
+- { ats: lever, board: swile, name: Swile }
+- { ats: lever, board: zopa, name: Zopa }
+- { ats: ashby, board: airbyte, name: Airbyte }
+- { ats: ashby, board: alan, name: Alan }
+- { ats: ashby, board: amplitude, name: Amplitude }
+- { ats: ashby, board: andela, name: Andela }
+- { ats: ashby, board: astronomer, name: Astronomer }
+- { ats: ashby, board: attio, name: Attio }
+- { ats: ashby, board: beamery, name: Beamery }
+- { ats: ashby, board: buffer, name: Buffer }
+- { ats: ashby, board: camunda, name: Camunda }
+- { ats: ashby, board: circle, name: Circle }
+- { ats: ashby, board: clerk, name: Clerk }
+- { ats: ashby, board: clickhouse, name: ClickHouse }
+- { ats: ashby, board: clickup, name: ClickUp }
+- { ats: ashby, board: close, name: Close }
+- { ats: ashby, board: cognition, name: Cognition }
+- { ats: ashby, board: cohere, name: Cohere }
+- { ats: ashby, board: decagon, name: Decagon }
+- { ats: ashby, board: deepgram, name: Deepgram }
+- { ats: ashby, board: docplanner, name: Docplanner }
+- { ats: ashby, board: doctolib, name: Doctolib }
+- { ats: ashby, board: drata, name: Drata }
+- { ats: ashby, board: enpal, name: Enpal }
+- { ats: ashby, board: forto, name: Forto }
+- { ats: ashby, board: frontify, name: Frontify }
+- { ats: ashby, board: glia, name: Glia }
+- { ats: ashby, board: griffin, name: Griffin }
+- { ats: ashby, board: harvey, name: Harvey }
+- { ats: ashby, board: helpscout, name: Help Scout }
+- { ats: ashby, board: hopper, name: Hopper }
+- { ats: ashby, board: improbable, name: Improbable }
+- { ats: ashby, board: influxdata, name: InfluxData }
+- { ats: ashby, board: iterable, name: Iterable }
+- { ats: ashby, board: jobber, name: Jobber }
+- { ats: ashby, board: kraken.com, name: Kraken }
+- { ats: ashby, board: langchain, name: LangChain }
+- { ats: ashby, board: lemonade, name: Lemonade }
+- { ats: ashby, board: lendable, name: Lendable }
+- { ats: ashby, board: lightspeedhq, name: Lightspeed }
+- { ats: ashby, board: livekit, name: LiveKit }
+- { ats: ashby, board: marshmallow, name: Marshmallow }
+- { ats: ashby, board: modal, name: Modal }
+- { ats: ashby, board: multiverse, name: Multiverse }
+- { ats: ashby, board: mural, name: Mural }
+- { ats: ashby, board: mux, name: Mux }
+- { ats: ashby, board: mystenlabs, name: Mysten Labs }
+- { ats: ashby, board: nubank, name: Nubank }
+- { ats: ashby, board: paddle, name: Paddle }
+- { ats: ashby, board: parloa, name: Parloa }
+- { ats: ashby, board: paxos, name: Paxos }
+- { ats: ashby, board: percona, name: Percona }
+- { ats: ashby, board: phantom, name: Phantom }
+- { ats: ashby, board: pinecone, name: Pinecone }
+- { ats: ashby, board: plaid, name: Plaid }
+- { ats: ashby, board: pleo, name: Pleo }
+- { ats: ashby, board: prefect, name: Prefect }
+- { ats: ashby, board: preply, name: Preply }
+- { ats: ashby, board: qonto, name: Qonto }
+- { ats: ashby, board: quantexa, name: Quantexa }
+- { ats: ashby, board: railway, name: Railway }
+- { ats: ashby, board: redis, name: Redis }
+- { ats: ashby, board: render, name: Render }
+- { ats: ashby, board: resend, name: Resend }
+- { ats: ashby, board: runway, name: Runway }
+- { ats: ashby, board: sanity, name: Sanity }
+- { ats: ashby, board: semgrep, name: Semgrep }
+- { ats: ashby, board: sierra, name: Sierra }
+- { ats: ashby, board: snyk, name: Snyk }
+- { ats: ashby, board: socket, name: Socket }
+- { ats: ashby, board: surveymonkey, name: SurveyMonkey }
+- { ats: ashby, board: synthesia, name: Synthesia }
+- { ats: ashby, board: temporal, name: Temporal }
+- { ats: ashby, board: thumbtack, name: Thumbtack }
+- { ats: ashby, board: uipath, name: UiPath }
+- { ats: ashby, board: wayve, name: Wayve }
+- { ats: ashby, board: wealthsimple, name: Wealthsimple }
+- { ats: ashby, board: weaviate, name: Weaviate }
+- { ats: ashby, board: workos, name: WorkOS }
+- { ats: ashby, board: xero, name: Xero }
+- { ats: ashby, board: zed, name: Zed }
+- { ats: ashby, board: zego, name: Zego }
+- { ats: workable, board: huggingface, name: Hugging Face }
+- { ats: smartrecruiters, board: BoschGroup, name: Bosch }
+- { ats: smartrecruiters, board: Canva, name: Canva }
+- { ats: smartrecruiters, board: Devoteam, name: Devoteam }
+- { ats: smartrecruiters, board: NielsenIQ, name: NielsenIQ }
+- { ats: smartrecruiters, board: Experian, name: Experian }
+- { ats: smartrecruiters, board: ServiceNow, name: ServiceNow }
+- { ats: smartrecruiters, board: Sixt, name: SIXT }
+- { ats: smartrecruiters, board: AbbVie, name: AbbVie }
+- { ats: smartrecruiters, board: SGS, name: SGS }
+- { ats: smartrecruiters, board: Sodexo, name: Sodexo }
+- { ats: smartrecruiters, board: Endava, name: Endava }
+- { ats: smartrecruiters, board: Alten, name: ALTEN }
+- { ats: smartrecruiters, board: Freshworks, name: Freshworks }
+- { ats: smartrecruiters, board: LinkedIn3, name: LinkedIn }
+- { ats: smartrecruiters, board: Playtech, name: Playtech }
+- { ats: smartrecruiters, board: KeywordsStudios, name: Keywords Studios }
+- { ats: smartrecruiters, board: Grab, name: Grab }
+- { ats: smartrecruiters, board: WesternDigital, name: Western Digital }
+- { ats: personio, board: 1komma5grad, name: 1KOMMA5° }
+- { ats: personio, board: vivid, name: Vivid Money }
+- { ats: personio, board: univention, name: Univention }
+- { ats: personio, board: wandelbots, name: Wandelbots }
+- { ats: personio, board: proglove, name: ProGlove }
 
 # Gulf employers
 - { ats: greenhouse, board: careem, name: Careem }
@@ -105,3 +306,15 @@
 - { ats: workable, board: blueground, name: Blueground }
 - { ats: workable, board: foodics, name: Foodics }
 - { ats: recruitee, board: bunq, name: bunq }
+- { ats: ashby, board: leantech, name: Lean Technologies }
+- { ats: ashby, board: thndr, name: Thndr }
+- { ats: workable, board: lucidya, name: Lucidya }
+- { ats: workable, board: salla, name: Salla }
+- { ats: recruitee, board: thmanyah, name: Thmanyah }
+- { ats: recruitee, board: unifonic, name: Unifonic }
+- { ats: smartrecruiters, board: DeliveryHero, name: Delivery Hero }
+- { ats: smartrecruiters, board: AECOM2, name: AECOM }
+- { ats: smartrecruiters, board: Almosafer, name: Almosafer }
+- { ats: smartrecruiters, board: Seera, name: Seera Group }
+- { ats: smartrecruiters, board: Masdar, name: Masdar }
+- { ats: smartrecruiters, board: RolandBerger, name: Roland Berger }
