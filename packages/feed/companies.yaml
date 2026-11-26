@@ -3,9 +3,12 @@
 # One company per line:
 #   - { ats: greenhouse, board: gitlab, name: GitLab }
 #
-#   ats    the job board system: greenhouse, lever, ashby, workable or recruitee
+#   ats    the job board system: greenhouse, lever, ashby, workable, recruitee,
+#          smartrecruiters or personio
 #   board  the company's id on that system, the part of its jobs page address
-#          that names the company (boards.greenhouse.io/gitlab -> gitlab)
+#          that names the company (boards.greenhouse.io/gitlab -> gitlab,
+#          jobs.smartrecruiters.com/BoschGroup -> BoschGroup,
+#          tado.jobs.personio.de -> tado)
 #   name   the company's name as people know it. For UK roles it is also
 #          compared with the register of licensed visa sponsors.
 #
@@ -188,7 +191,7 @@
 - { ats: lever, board: metabase, name: Metabase }
 - { ats: lever, board: moonpay, name: MoonPay }
 - { ats: lever, board: offchainlabs, name: Offchain Labs }
-- { ats: lever, board: secureframe, name: Secureframe }
+- { ats: ashby, board: secureframe, name: Secureframe }
 - { ats: lever, board: swile, name: Swile }
 - { ats: lever, board: zopa, name: Zopa }
 - { ats: ashby, board: airbyte, name: Airbyte }
@@ -272,6 +275,29 @@
 - { ats: ashby, board: zed, name: Zed }
 - { ats: ashby, board: zego, name: Zego }
 - { ats: workable, board: huggingface, name: Hugging Face }
+- { ats: smartrecruiters, board: BoschGroup, name: Bosch }
+- { ats: smartrecruiters, board: Canva, name: Canva }
+- { ats: smartrecruiters, board: Devoteam, name: Devoteam }
+- { ats: smartrecruiters, board: NielsenIQ, name: NielsenIQ }
+- { ats: smartrecruiters, board: Experian, name: Experian }
+- { ats: smartrecruiters, board: ServiceNow, name: ServiceNow }
+- { ats: smartrecruiters, board: Sixt, name: SIXT }
+- { ats: smartrecruiters, board: AbbVie, name: AbbVie }
+- { ats: smartrecruiters, board: SGS, name: SGS }
+- { ats: smartrecruiters, board: Sodexo, name: Sodexo }
+- { ats: smartrecruiters, board: Endava, name: Endava }
+- { ats: smartrecruiters, board: Alten, name: ALTEN }
+- { ats: smartrecruiters, board: Freshworks, name: Freshworks }
+- { ats: smartrecruiters, board: LinkedIn3, name: LinkedIn }
+- { ats: smartrecruiters, board: Playtech, name: Playtech }
+- { ats: smartrecruiters, board: KeywordsStudios, name: Keywords Studios }
+- { ats: smartrecruiters, board: Grab, name: Grab }
+- { ats: smartrecruiters, board: WesternDigital, name: Western Digital }
+- { ats: personio, board: 1komma5grad, name: 1KOMMA5° }
+- { ats: personio, board: vivid, name: Vivid Money }
+- { ats: personio, board: univention, name: Univention }
+- { ats: personio, board: wandelbots, name: Wandelbots }
+- { ats: personio, board: proglove, name: ProGlove }
 
 # Gulf employers
 - { ats: greenhouse, board: careem, name: Careem }
@@ -286,3 +312,9 @@
 - { ats: workable, board: salla, name: Salla }
 - { ats: recruitee, board: thmanyah, name: Thmanyah }
 - { ats: recruitee, board: unifonic, name: Unifonic }
+- { ats: smartrecruiters, board: DeliveryHero, name: Delivery Hero }
+- { ats: smartrecruiters, board: AECOM2, name: AECOM }
+- { ats: smartrecruiters, board: Almosafer, name: Almosafer }
+- { ats: smartrecruiters, board: Seera, name: Seera Group }
+- { ats: smartrecruiters, board: Masdar, name: Masdar }
+- { ats: smartrecruiters, board: RolandBerger, name: Roland Berger }

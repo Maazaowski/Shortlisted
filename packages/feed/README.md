@@ -13,6 +13,8 @@ Company job boards only, through the public JSON endpoints the board systems pub
 | Ashby | `api.ashbyhq.com/posting-api/job-board/{board}` | Unlisted jobs are dropped. |
 | Workable | `apply.workable.com/api/v1/widget/accounts/{board}?details=true` | |
 | Recruitee | `{board}.recruitee.com/api/offers/` | Stops working without a key on 10 Feb 2027. |
+| SmartRecruiters | `api.smartrecruiters.com/v1/companies/{board}/postings` | The list has no description, so only remote, Gulf and UK jobs are read in full, at most 400 per company. |
+| Personio | `{board}.jobs.personio.de/xml?language=en` | XML. `.jobs.personio.com` is tried when `.de` has no such company. |
 
 Every listing links to the employer's own posting. No page is scraped and no key is used.
 
@@ -25,10 +27,9 @@ Checked on 11 Nov 2026.
 - **Himalayas.** Its API terms forbid passing listings on through feeds and forbid replacing its link with the employer's.
 - **Remotive.** Its terms forbid redistributing listings to third parties.
 - **RemoteOK, We Work Remotely, Jobicy.** Each requires that the apply link point to its own site, not the employer. Shortlisted only links to the employer.
-- **SmartRecruiters.** The list endpoint has no description, so a company with thousands of jobs costs thousands of requests a day.
 - **LinkedIn, Indeed and any site without a public endpoint.** Not scraped.
 
-None of the five board systems above publishes terms for its public endpoint that either grant or forbid republishing. If one of them objects, remove its adapter from `src/sources/index.ts`.
+None of the first five board systems above publishes terms for its public endpoint that either grant or forbid republishing. SmartRecruiters and Personio were added on 26 Nov 2026 and their terms have not been read yet. If a system objects, remove its adapter from `src/sources/index.ts`.
 
 ## Adding a company
 
@@ -63,6 +64,8 @@ A job is kept when it is remote, when it states visa sponsorship or relocation s
 ## Known limits
 
 - Gulf coverage is thin. Most large Gulf employers use Workday, Oracle or SAP, which have no public endpoint like these.
+- A SmartRecruiters job is only read when its list entry is remote, in a Gulf country or in the UK. An office role elsewhere that offers a visa in its text is missed. An unknown SmartRecruiters company answers with an empty list, so `check-boards` shows it as empty, not failed.
+- A Personio posting written only in German keeps its German text. The rules read English, so it is kept only when its office says remote.
 - Most remote roles are limited to one country. In the first build, about 4% of remote listings admitted someone living in Pakistan.
 - Skills come from a fixed vocabulary. A skill that is not in the list is not found.
 - Application questions and whether a cover letter is required are not in the feed. No list endpoint exposes them.
